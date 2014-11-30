@@ -59,9 +59,12 @@ def check_unmirrored(src, dests):
 
 def main3():
 	start = None
-	if len(sys.argv) == 2:
-		start = sys.argv[1]
-	it = GermanNounFileIterator(start, "category")
+	if len(sys.argv) < 2:
+		print "Usage: %s <file> [start]"
+	file = sys.argv[1]
+	if len(sys.argv) == 3:
+		start = sys.argv[2]
+	it = GermanNounFileIterator(start, file)
 	for i in it:
 		sys.stdout.write("\r%s" %  (" " * 100))
 		sys.stdout.write("\r%s" % i.noun)
@@ -85,17 +88,35 @@ def main2():
 			if check_unmirrored(i.noun, i.get_french()):
 				return
 
-def main():
-	it = GermanNounPageRawIterator(None)
-	f = open("category", "w")
+def main1():
+	if len(sys.argv) != 2:
+		print "usage: %s <categorie>" % sys.argv[0]
+		return
+	#ex: Kategorie:Substantiv_(Deutsch)"
+	cat = sys.argv[1]
+	it = GermanNounPageRawIterator(cat, None)
 	for i in it:
-		sys.stdout.write("\r%s" %  (" " * 100))
-		sys.stdout.write("\r%s" % i)
+		sys.stderr.write("\r%s" %  (" " * 100))
+		sys.stderr.write("\r%s" % i)
+		sys.stderr.flush()
+		sys.stdout.write(i.encode("utf-8"))
+		sys.stdout.write("\n")
 		sys.stdout.flush()
-		f.write(i.encode("utf-8"))
-		f.write("\n")
-		f.flush()
 	f.close()
+
+""" https://fr.wiktionary.org/wiki/Wiktionnaire:Listes_de_fr%C3%A9quence/wortschatz-de-1-2000 """
+def main():
+	if len(sys.argv) != 2:
+		print "usage: %s <categorie>" % sys.argv[0]
+		return
+	
+	freq_page = sys.argv[1].decode("utf-8")
+	it = FreqNounIterator(freq_page)
+
+	for i in it:
+		sys.stdout.write(i)
+		sys.stdout.write("\n")
+		sys.stdout.flush()
 
 if __name__ == "__main__":
 	main3()

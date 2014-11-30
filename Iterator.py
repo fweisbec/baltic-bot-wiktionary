@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf8 -*-
 
+import re
 from Page import *
 
 class NounIterator(object):
@@ -11,7 +12,7 @@ class NounIterator(object):
 		if self.started:
 			return False
 		#print "%s %s" % (n, self.start)
-		if n == self.start:
+		if self.start is None or n == self.start:
 			self.started = True
 			return False
 		return True
@@ -51,10 +52,15 @@ class GermanNounPageIterator(NounPageIterator):
 		return GermanNounPage.from_noun(n)
 
 class GermanNounPageRawIterator(NounPageIterator):
-	URL = "http://de.wiktionary.org/w/api.php?action=query&list=categorymembers&cmtitle=Kategorie:Substantiv_(Deutsch)&format=json"
+	URL = "http://de.wiktionary.org/w/api.php?action=query&list=categorymembers&cmtitle=%s&format=json"
 
+	def __init__(self, cat, start = None):
+		#@cat = ex: Kategorie:Substantiv_(Deutsch)
+		self.url = self.URL % cat
+		NounPageIterator.__init__(self, start)
+		
 	def __iter__(self):
-		self.it = GermanNounListPage(self.URL)
+		self.it = GermanNounListPage(self.url)
 		return NounPageIterator.__iter__(self)
 
 class EnglishNounPageIterator(NounPageIterator):
@@ -86,3 +92,31 @@ class GermanNounFileIterator(NounFileIterator):
 	def next(self):
 		n = NounFileIterator.next(self)
 		return GermanNounPage.from_noun(n.decode("utf-8"))
+
+class FreqNounIterator(NounPageIterator):
+	URL = "http://fr.wiktionary.org/w/api.php?action=query&list=categorymembers&cmtitle=%s&format=json"
+
+	def __init__(self, title):
+		"ex: Wiktionnaire:Listes_de_fréquence/wortschatz-de-1-2000"
+		self.page = FrenchNounPage.from_noun(title)
+		
+	def __iter__(self):
+		self.it = iter(self.page.wikicode().splitlines())
+		self.remain = None
+		return self
+
+	def next(self):
+		if self.remain is not None:
+			r = self.remain
+			self.remain = None
+			return r
+
+		while True:
+			line = self.it.next()
+			s = re.search("[*] [0-9]+[.] [[]{2}(.+?)[]]{2}", line)
+			if s is not None:
+				g = s.group(1)
+				g = g.split("|")
+				if len(g) > 1:
+					self.remain = g[1]
+				return g[0]
