@@ -99,3 +99,7 @@ class EnglishNounListPage(NounListPage):
 class GermanNounListPage(NounListPage):
 	def _filter_link(self, links):
 		return False
+
+class FrenchCategoryPage(NounListPage):
+	def _filter_link(self, links):
+		return False
