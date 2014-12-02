@@ -86,12 +86,12 @@ class NounFileIterator(NounIterator):
 		return self
 
 	def _next(self):
-		return self.it.next().strip()
+		return self.it.next().strip().decode("utf-8")
 
 class GermanNounFileIterator(NounFileIterator):
 	def next(self):
 		n = NounFileIterator.next(self)
-		return GermanNounPage.from_noun(n.decode("utf-8"))
+		return GermanNounPage.from_noun(n)
 
 class FreqNounIterator(NounPageIterator):
 	URL = "http://fr.wiktionary.org/w/api.php?action=query&list=categorymembers&cmtitle=%s&format=json"

@@ -62,6 +62,9 @@ class FrenchNounPage(NounPage):
 	def get_german(self):
 		return self._get_translations("\{\{trad[+-]\|de\|(.+?)\}\}")
 
+	def get_latvian(self):
+		return self._get_translations("\{\{trad[+-]\|lv\|(.+?)\}\}")
+
 	def find_l4_section(self, s):
 		return self.wikicode().find(pattern % s)
 
