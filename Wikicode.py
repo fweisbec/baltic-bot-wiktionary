@@ -85,6 +85,26 @@ class Editor(object):
 		self.req = requests.post(url, data = post, cookies = cookies)
 		cookies.update(self.req.cookies)
 
+class Creator(object):
+	def __init__(self, word, wikicode):
+		self.word = word
+		self.wikicode = wikicode
+
+	def commit(self, summary):
+		tkpage = JsonPage("http://fr.wiktionary.org/w/api.php?action=query&meta=tokens&format=json")
+		token = tkpage.json["query"]["tokens"]["csrftoken"]
+		post = {
+			"action" : "edit",
+			"title"  : self.word.encode("utf-8"),
+			"summary": summary.encode("utf-8"),
+			"text"   : self.wikicode.encode("utf-8"),
+			"createonly" : "1",
+			"token" : token
+		}
+		url = "http://fr.wiktionary.org/w/api.php"
+		cookies = WiktionaryCookie.WiktionaryCookie.getInstance()
+		self.req = requests.post(url, data = post, cookies = cookies)
+		cookies.update(self.req.cookies)
 
 __code_test = """
 ==== {{S|synonymes}} ====
