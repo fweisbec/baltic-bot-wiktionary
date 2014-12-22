@@ -11,6 +11,7 @@ from Iterator import *
 parser = optparse.OptionParser()
 parser.add_option("-l", "--latvian", type = "string", dest = "latvian")
 parser.add_option("-f", "--french", type = "string", dest = "french")
+parser.add_option("-t", "--type", type = "string", dest = "type", default = "nom")
 (options, args) = parser.parse_args()
 
 pattern = \
@@ -18,7 +19,7 @@ u"""== {{langue|lv}} ==
 === {{S|étymologie}} ===
 : {{ébauche-étym|lv}}
 
-=== {{S|nom|lv}} ===
+=== {{S|%s|lv}} ===
 '''%s''' {{pron||lv}}
 # [[%s#fr|%s]]."""
 
@@ -30,7 +31,7 @@ def main():
 		print "Page already exist"
 		return
 
-	wikicode = pattern % (lv, fr, fr.title())
+	wikicode = pattern % (options.type, lv, fr, fr.title())
 	# Preview wikicode
 	print wikicode
 	# Check word on navigator
