@@ -44,7 +44,7 @@ def main():
 		c = Creator(lv, wikicode)
 		c.commit(u"Création de la page du mot letton %s en miroir à la traduction de %s" % (lv, fr))
 	else:
-		print "?"	
+		print "?"
 
 if __name__ == "__main__":
 	main()

@@ -47,6 +47,14 @@ class WikicodeFrench(object):
 		parsed.insert_after(prev, new_tpl)
 		return parsed.encode("utf-8")
 
+	def add_decl_1st(self, word):
+		parsed = mwparserfromhell.parse(self.wikicode)
+		prev = u"=== {{S|nom|lv}} ===\n"
+		txt = u"{{lv-décl-m-s|%s}}\n" % word[:-1]
+		decl = mwparserfromhell.nodes.text.Text(txt)
+		parsed.insert_after(prev, decl)
+		return parsed.encode("utf-8")
+
 class Editor(object):
 	def __init__(self, noun):
 		# First get base rev time
@@ -60,6 +68,10 @@ class Editor(object):
 	def add_translation_de(self, de, info):
 		w = WikicodeFrench(self.new)
 		self.new = w.add_translation_de(de, info)
+
+	def add_decl_1st(self):
+		w = WikicodeFrench(self.new)
+		self.new = w.add_decl_1st(self.noun.noun)
 
 	def diff(self):
 		ret = ""
