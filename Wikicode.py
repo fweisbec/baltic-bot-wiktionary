@@ -56,14 +56,14 @@ class WikicodeFrench(object):
 		return parsed.encode("utf-8")
 
 	def update_doms(self, word, doms):
-		txt = self.wikicode.decode("utf-8")
-		txt = re.sub(u"\[\[[a-z]+:%s\]\]\n?" % word, "", txt, re.M | re.U)
+		txt = self.wikicode
+		txt = re.sub(u"\[\[[a-z-]+:%s\]\]\n?" % word, "", txt, re.M | re.U)
 		# Not sure why but I need to do it twice in order to remove all of them
-		txt = re.sub(u"\[\[[a-z]+:%s\]\]\n?" % word, "", txt, re.M | re.U)
+		txt = re.sub(u"\[\[[a-z-]+:%s\]\]\n?" % word, "", txt, re.M | re.U)
 		txt = txt.rstrip() + "\n\n"
 		for dom in doms:
 			txt += u"[[%s:%s]]\n" % (dom, word)
-		return txt.encode("utf8")
+		return txt
 		
 
 class Editor(object):
@@ -101,9 +101,9 @@ class Editor(object):
 		token = tkpage.json["query"]["tokens"]["csrftoken"]
 		post = {
 			"action" : "edit",
-			"title"  : self.noun.noun,
+			"title"  : self.noun.noun.encode("utf-8"),
 			"summary": summary,
-			"text"   : self.new,
+			"text"   : self.new.encode("utf-8"),
 			"basetimestamp" : self.basetimestamp,
 			"token" : token
 		}

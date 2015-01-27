@@ -51,7 +51,7 @@ class NounPage(JsonPage):
 		return True
 
 	def wikicode(self):
-		return self.json["query"]["pages"].values()[0]["revisions"][0]["*"].encode("utf-8")
+		return self.json["query"]["pages"].values()[0]["revisions"][0]["*"]
 
 	def _get_translations(self, reg):
 		res = re.findall(reg, self.wikicode(), re.M)
