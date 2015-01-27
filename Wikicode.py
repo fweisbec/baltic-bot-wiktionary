@@ -55,6 +55,17 @@ class WikicodeFrench(object):
 		parsed.insert_after(prev, decl)
 		return parsed.encode("utf-8")
 
+	def update_doms(self, word, doms):
+		txt = self.wikicode.decode("utf-8")
+		txt = re.sub(u"\[\[[a-z]+:%s\]\]\n?" % word, "", txt, re.M | re.U)
+		# Not sure why but I need to do it twice in order to remove all of them
+		txt = re.sub(u"\[\[[a-z]+:%s\]\]\n?" % word, "", txt, re.M | re.U)
+		txt = txt.rstrip() + "\n\n"
+		for dom in doms:
+			txt += u"[[%s:%s]]\n" % (dom, word)
+		return txt.encode("utf8")
+		
+
 class Editor(object):
 	def __init__(self, noun):
 		# First get base rev time
@@ -72,6 +83,10 @@ class Editor(object):
 	def add_decl_1st(self):
 		w = WikicodeFrench(self.new)
 		self.new = w.add_decl_1st(self.noun.noun)
+
+	def update_doms(self, doms):
+		w = WikicodeFrench(self.new)
+		self.new = w.update_doms(self.noun.noun, doms)
 
 	def diff(self):
 		ret = ""

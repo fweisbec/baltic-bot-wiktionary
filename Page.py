@@ -30,10 +30,14 @@ class RevisionFrenchPage(JsonPage):
 
 class NounPage(JsonPage):
 	@classmethod
-	def from_noun(cls, noun):
-		base_url = "http://" + cls.DOM + ".wiktionary.org/w/api.php?format=json&action=query&%s&prop=revisions&rvprop=content"
+	def from_noun_dom(cls, noun, dom):
+		base_url = "http://" + dom + ".wiktionary.org/w/api.php?format=json&action=query&%s&prop=revisions&rvprop=content"
 		url = base_url % urllib.urlencode({"titles" : noun.encode("utf-8") })
 		return cls(noun, url)
+
+	@classmethod
+	def from_noun(cls, noun):
+		return cls.from_noun_dom(noun, cls.DOM)
 		
 	def __init__(self, noun, url):
 		JsonPage.__init__(self, url)

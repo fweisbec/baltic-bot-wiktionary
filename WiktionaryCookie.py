@@ -6,12 +6,23 @@ import WikiLogin
 
 class WiktionaryCookie(dict):
 	_instance = None
+	_anon_mode = False
 
 	@staticmethod
 	def getInstance():
+		if WiktionaryCookie._anon_mode:
+			return dict()
 		if not WiktionaryCookie._instance:
 			WiktionaryCookie._instance = WiktionaryCookie()
 		return WiktionaryCookie._instance
+
+	@staticmethod
+	def set_anon_mode():
+		WiktionaryCookie._anon_mode = True
+
+	@staticmethod
+	def clear_anon_mode():
+		WiktionaryCookie._anon_mode = False
 
 	def __init__(self):
 		data = {"action" : "login", "lgname" : WikiLogin.USER, "lgpassword" : WikiLogin.PASS, "format" : "json"}
