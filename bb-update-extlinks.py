@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf8 -*-
 
-import os, sys, requests, time
+import os, sys, requests, time, optparse
 from threading import Thread
 from termcolor import colored
 
@@ -10,30 +10,36 @@ from Wikicode import *
 from Page import *
 from Iterator import *
 
-DOMS = ("af", "an", "ar", "ast", "az", \
-		"be", "bg", "br", "bs", \
+DOMS = ("af", "am", "an", "ang", "ar", "ast", "az", \
+		"be", "bg", "bn", "br", "bs", \
 		"ca", "chr", "co", "cs", "csb", "cy", \
 		"da", "de", \
 		"el", "en", "eo", "es", "et", "eu", \
-		"fa", "fi", "fj", "fy", \
-		"ga", "gl", "gu", \
+		"fa", "fi", "fj", "fo", "fy", \
+		"ga", "gl", "gn", "gu", \
 		"he", "hi", "hr", "hsb", "hu", "hy", \
-		"id", "io", "is", "it", \
-		"ja", "jv", \
+		"ia", "id", "ie", "ik", "io", "is", "it", \
+		"ja", "jbo", "jv", \
 		"ka", "kk", "kl", "km", "kn", "ko", "ku", "ky", \
 		"la", "lb", "li", "ln", "lo", "lt", "lv", \
 		"mg", "mk", "ml", "mn", "mr", "ms", "mt", "my", \
-		"nah", "nds", "nl", "nn", "no", \
+		"na", "nah", "nds", "ne", "nl", "nn", "no", \
 		"oc", "om", \
-		"pl", "pt", \
-		"ro", "ru", "rw", \
-		"sa", "scn", "sh", "simple", "sk", "sl", "sm", "sq", "sr", "ss", "st", "sv", "sw", \
-		"ta", "te", "th", "tk", "tl", "tpi", "tr", "tt", \
+		"pl", "pnb", "ps", "pt", \
+		"ro", "roa-rup", "ru", "rw", \
+		"sa", "scn", "sd", "sg", "sh", "si", "simple", "sk", "sl", "sm", "so", "sq", "sr", "ss", "st", "su", "sv", "sw", \
+		"ta", "te", "tg", "th", "tk", "tl", "tpi", "tr", "tt", \
 		"ug", "uk", "uz", \
 		"vec", "vi", "vo", \
-		"wa", \
+		"wa", "wo", \
 		"yi", \
 		"zh", "zh-min-nan", "zu")
+
+parser = optparse.OptionParser()
+parser.add_option("-c", "--category", type = "string", dest = "cat", default = "letton")
+parser.add_option("-s", "--start", type = "string", dest = "start", default = None)
+(options, args) = parser.parse_args()
+
 
 def diff_auto_accept(word, diff):
 	empty = 0
@@ -69,7 +75,7 @@ def update_doms(word, doms):
 		print colored("No change, skipping...", "red")
 		return
 	if diff_auto_accept(word, diff):
-		e.commit(u"Update liens externes")
+		e.commit(u"Update liens interwikis")
 		print colored("Automatically committed!", "green")
 		log = open("interlink_auto.log", "a")
 		log.write("\n" + diff.encode("utf-8"))
@@ -124,10 +130,8 @@ def get_doms_async(word):
 	return doms
 
 def main():
-	start = None
-	if len(sys.argv) > 1:
-		start = sys.argv[1].decode("utf8")
-	it = FrenchCategoryRawIterator(u"letton", start = start)
+	start = options.start
+	it = FrenchCategoryRawIterator(options.cat.decode("utf-8"), start = start)
 	for i in it:
 		if "," in i:
 			continue

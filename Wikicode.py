@@ -57,9 +57,11 @@ class WikicodeFrench(object):
 
 	def update_doms(self, word, doms):
 		txt = self.wikicode
-		txt = re.sub(u"\[\[[a-z-]+:%s\]\]\n?" % word, "", txt, re.M | re.U)
+		txt = re.sub(u"\[\[[a-z-]+:%s\]\]\n?" % word, "", txt, count = 500, flags = re.M | re.U)
 		# Not sure why but I need to do it twice in order to remove all of them
-		txt = re.sub(u"\[\[[a-z-]+:%s\]\]\n?" % word, "", txt, re.M | re.U)
+		#txt = re.sub(u"\[\[[a-z-]+:%s\]\]\n?" % word, "", txt, re.M | re.U)
+		#txt = re.sub(u"\[\[[a-z-]+:%s\]\]\n?" % word, "", txt, re.M | re.U)
+		#print txt
 		txt = txt.rstrip() + "\n\n"
 		for dom in doms:
 			txt += u"[[%s:%s]]\n" % (dom, word)
