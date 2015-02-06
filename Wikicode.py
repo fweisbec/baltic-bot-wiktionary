@@ -58,10 +58,6 @@ class WikicodeFrench(object):
 	def update_doms(self, word, doms):
 		txt = self.wikicode
 		txt = re.sub(u"\[\[[a-z-]+:%s\]\]\n?" % word, "", txt, count = 500, flags = re.M | re.U)
-		# Not sure why but I need to do it twice in order to remove all of them
-		#txt = re.sub(u"\[\[[a-z-]+:%s\]\]\n?" % word, "", txt, re.M | re.U)
-		#txt = re.sub(u"\[\[[a-z-]+:%s\]\]\n?" % word, "", txt, re.M | re.U)
-		#print txt
 		txt = txt.rstrip() + "\n\n"
 		for dom in doms:
 			txt += u"[[%s:%s]]\n" % (dom, word)
@@ -70,11 +66,9 @@ class WikicodeFrench(object):
 
 class Editor(object):
 	def __init__(self, noun):
-		# First get base rev time
-		rev = RevisionFrenchPage.from_noun(noun)
-		self.basetimestamp = rev.revision_time()
 		# Get noun page
 		self.noun = FrenchNounPage.from_noun(noun)
+		self.basetimestamp = self.noun.revision_time()
 		self.old = self.noun.wikicode()
 		self.new = self.noun.wikicode()
 
@@ -107,7 +101,8 @@ class Editor(object):
 			"summary": summary,
 			"text"   : self.new.encode("utf-8"),
 			"basetimestamp" : self.basetimestamp,
-			"token" : token
+			"token" : token,
+			"bot"	: ""
 		}
 		url = "http://fr.wiktionary.org/w/api.php"
 		cookies = WiktionaryCookie.WiktionaryCookie.getInstance()

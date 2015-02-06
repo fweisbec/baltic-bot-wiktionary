@@ -33,8 +33,15 @@ class WiktionaryCookie(dict):
 		r = requests.post("http://fr.wiktionary.org/w/api.php", data = data, cookies = cookies)
 		self.update(r.cookies)
 
+	def logout(self):
+		data = {"action" : "logout", "format" : "json"}
+		r = requests.post("http://fr.wiktionary.org/w/api.php", data = data, cookies = self)
+		self.update(r.cookies)
+		WiktionaryCookie._instance = None
+
 if __name__ == "__main__":
-	print WiktionaryCookie()
+	w = WiktionaryCookie()
+	w.logout()
 
 # Read page: http://en.wikipedia.org/w/api.php?format=json&action=query&titles=Albert%20Einstein&prop=revisions&rvprop=content
 

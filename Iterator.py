@@ -122,7 +122,7 @@ class FreqNounIterator(NounPageIterator):
 				return g[0]
 
 class FrenchCategoryRawIterator(NounPageIterator):
-	URL = u"http://fr.wiktionary.org/w/api.php?action=query&list=categorymembers&cmtitle=Catégorie:%s&format=json"
+	URL = u"http://fr.wiktionary.org/w/api.php?action=query&list=categorymembers&cmtitle=Catégorie:%s&format=json&cmlimit=200"
 
 	def __init__(self, cat, start = None):
 		#@cat = ex: "Noms communs en français")
