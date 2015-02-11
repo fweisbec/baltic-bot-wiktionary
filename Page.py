@@ -5,11 +5,14 @@ import requests, urllib, re
 import WiktionaryCookie
 
 class JsonPage(object):
-	def __init__(self, url):
+	def __init__(self, url, dom = None):
 		self.url = url
+		self.dom = dom
 		cookies = WiktionaryCookie.WiktionaryCookie.getInstance()
 		headers = {"User-Agent" : "Baltic Bot (https://fr.wiktionary.org/wiki/Utilisateur:Baltic_Bot ; fweisbec@gmail.com)"}
 		self.req = requests.get(url, cookies = cookies, headers = headers)
+		if self.req.status_code != requests.codes.ok:
+			self.req.raise_for_status()
 		try:
 			self.json = self.req.json()
 		except ValueError:
@@ -24,13 +27,22 @@ class JsonPage(object):
 		return None
 
 class QueryPage(JsonPage):
-	def __init__(self, noun, url):
+	def __init__(self, noun, url, dom = None):
 		url += "&maxlag=5"
-		JsonPage.__init__(self, url)
+		JsonPage.__init__(self, url, dom)
 		self.noun = noun
 
-	def valid(self):
-		status = self.json["query"]["pages"].values()[0]
+	def key(self, title):
+		for k in self.json["query"]["pages"]:
+			if title == self.json["query"]["pages"][k]["title"]:
+				return k
+		return None
+			
+	def title(self, key):
+		return self.json["query"]["pages"][key]["title"]
+
+	def valid(self, key):
+		status = self.json["query"]["pages"][key]
 		for i in ("missing", "invalid"):
 			if i in status:
 				return False
@@ -38,27 +50,37 @@ class QueryPage(JsonPage):
 
 class TestPage(QueryPage):
 	@classmethod
-	def from_noun_dom(cls, noun, dom):
-		base_url = "http://" + dom + ".wiktionary.org/w/api.php?format=json&action=query&%s"
-		url = base_url % urllib.urlencode({"titles" : noun.encode("utf-8") })
-		return cls(noun, url)
+	def from_nouns_dom(cls, nouns, dom):
+		base_url = "http://" + dom + ".wiktionary.org/w/api.php?format=json&action=query&titles=%s"
+		http_nouns = "|".join([urllib.quote_plus(noun.encode("utf8")) for noun in nouns])
+		url = base_url % http_nouns 
+		return cls(noun, url, dom)
 
 class NounPage(QueryPage):
 	@classmethod
+	def from_nouns_dom(cls, nouns, dom):
+		base_url = "http://" + dom + ".wiktionary.org/w/api.php?format=json&action=query&titles=%s&prop=revisions&rvprop=content|timestamp"
+		http_nouns = "|".join([urllib.quote_plus(noun.encode("utf8")) for noun in nouns])
+		url = base_url % http_nouns 
+		return cls(noun, url, dom)
+
+	@classmethod
 	def from_noun_dom(cls, noun, dom):
-		base_url = "http://" + dom + ".wiktionary.org/w/api.php?format=json&action=query&%s&prop=revisions&rvprop=content|timestamp"
-		url = base_url % urllib.urlencode({"titles" : noun.encode("utf-8") })
-		return cls(noun, url)
+		return cls.from_nouns_dom([noun], dom)
+
+	@classmethod
+	def from_nouns(cls, nouns):
+		return cls.from_nouns_dom(noun, cls.DOM)
 
 	@classmethod
 	def from_noun(cls, noun):
-		return cls.from_noun_dom(noun, cls.DOM)
+		return cls.from_nouns_dom([noun], cls.DOM)
 
-	def wikicode(self):
-		return self.json["query"]["pages"].values()[0]["revisions"][0]["*"]
+	def wikicode(self, key):
+		return self.json["query"]["pages"][key]["revisions"][0]["*"]
 
-	def revision_time(self):
-		return self.json["query"]["pages"].values()[0]["revisions"][0]["timestamp"]
+	def revision_time(self, key):
+		return self.json["query"]["pages"][key]["revisions"][0]["timestamp"]
 
 	def _get_translations(self, reg):
 		res = re.findall(reg, self.wikicode(), re.M)

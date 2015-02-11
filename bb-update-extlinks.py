@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf8 -*-
 
-import os, sys, requests, time, optparse
+import os, sys, requests, time, optparse, exceptions
 from threading import Thread
 from termcolor import colored
 
@@ -16,27 +16,29 @@ DOMS = ("af", "am", "an", "ang", "ar", "ast", "az", \
 		"da", "de", "dv", \
 		"el", "en", "eo", "es", "et", "eu", \
 		"fa", "fi", "fj", "fo", "fy", \
-		"ga", "gl", "gn", "gu", \
+		"ga", "gd", "gl", "gn", "gu", "gv", \
 		"he", "hi", "hr", "hsb", "hu", "hy", \
-		"ia", "id", "ie", "ik", "io", "is", "it", \
+		"ia", "id", "ie", "ik", "io", "is", "it", "iu", \
 		"ja", "jbo", "jv", \
-		"ka", "kk", "kl", "km", "kn", "ko", "ku", "kw", "ky", \
+		"ka", "kk", "kl", "km", "kn", "ko", "ks", "ku", "kw", "ky", \
 		"la", "lb", "li", "ln", "lo", "lt", "lv", \
-		"mg", "mk", "ml", "mn", "mr", "ms", "mt", "my", \
+		"mg", "mi", "mk", "ml", "mn", "mr", "ms", "mt", "my", \
 		"na", "nah", "nds", "ne", "nl", "nn", "no", \
 		"oc", "om", \
-		"pl", "pnb", "ps", "pt", \
+		"pa", "pl", "pnb", "ps", "pt", \
+		"qu", \
 		"ro", "roa-rup", "ru", "rw", \
 		"sa", "scn", "sd", "sg", "sh", "si", "simple", "sk", "sl", "sm", "so", "sq", "sr", "ss", "st", "su", "sv", "sw", \
-		"ta", "te", "tg", "th", "tk", "tl", "tpi", "tr", "tt", \
+		"ta", "te", "tg", "th", "ti", "tk", "tl", "tn", "tpi", "tr", "ts", "tt", \
 		"ug", "uk", "ur", "uz", \
 		"vec", "vi", "vo", \
 		"wa", "wo", \
 		"yi", \
-		"zh", "zh-min-nan", "zu")
+		"za", "zh", "zh-min-nan", "zu")
 
 parser = optparse.OptionParser()
 parser.add_option("-c", "--category", type = "string", dest = "cat", default = "letton")
+parser.add_option("-i", "--input", type = "string", dest = "input", default = None)
 parser.add_option("-s", "--start", type = "string", dest = "start", default = None)
 parser.add_option("-a", "--auto", action = "store_true", dest = "auto")
 parser.add_option("-f", "--force", action = "store_true", dest = "force")
@@ -92,8 +94,8 @@ def diff_auto_accept(word, diff):
 
 	return True
 
-def update_doms(word, doms):
-	e = Editor(word)
+def update_word_doms(word, wikicode, basetimestamp, doms):
+	e = Editor(word, wikicode, basetimestamp)
 	e.update_doms(doms)
 	diff = e.diff()
 
@@ -130,77 +132,144 @@ def update_doms(word, doms):
 	else:
 		print "?"
 
-class GetDomThread(Thread):
-	def __init__(self, dom, word):
+def update_words_doms(words_doms):
+	words = words_doms.keys()
+	if not words:
+		return
+
+	# Load words pages from fr.wiktionary
+	delay = 5
+	while True:
+		t = time.time()
+		sys.stdout.write(colored("Loading %d words from fr..." % len(words), "yellow"))
+		try:
+			pages = NounPage.from_nouns_dom(words, "fr")
+			if pages.error():
+				print colored(pages.error(), "red")
+			else:
+				print colored(" completed in %f" % (time.time() - t), "yellow")
+				break
+		except exceptions.IOError as e:
+			print colored(repr(e), "red")
+
+		print colored(" retrying in %d" % delay, "red")
+		time.sleep(delay)
+		delay *= 2
+
+	# Update each word with uptodate doms
+	for w in words:
+		sys.stdout.write(w + " " * (50 - len(w)))
+		delay = 5
+		while True:
+			try:
+				key = pages.key(w)
+				if key is None:
+					print colored("Unable to find key for %s" % w, "red")
+					sys.exit(-1)
+				if not pages.valid(key):
+					print colored("Invalid page for %s" % w, "red")
+					sys.exit(-1)
+				wikicode = pages.wikicode(key)
+				basetimestamp = pages.revision_time(key) 
+				update_word_doms(w, wikicode, basetimestamp, words_doms[w])
+				break
+			except exceptions.IOError as e:
+				print colored("Unable to commit edit, %s" % repr(e), "red")
+				time.sleep(delay)
+				delay *= 2
+
+class GetDomWordsThread(Thread):
+	def __init__(self, dom, words):
 		Thread.__init__(self)
 		self.dom = dom
-		self.word = word
-		self.has_page = False
-		self.error = False
+		self.words = words
 		self.error_msg = None
+		self.page = None
 
 	def run(self):
 		try:
-			p = TestPage.from_noun_dom(self.word, self.dom)
-		except requests.ConnectionError:
-			self.error = True
-			self.error_msg = "requests.ConnectionError"
+			p = TestPage.from_nouns_dom(self.words, self.dom)
+		except exceptions.IOError as e:
+			self.error_msg = repr(e)
 			return
 		# Error such as maxlag
 		if p.error():
-			self.error = True
 			self.error_msg = p.error()
-		elif p.valid():
-			self.has_page = True
+		else:
+			self.page = p
 
-def get_doms_async(word):
-	doms = []
+def get_doms_pages(words):
+	doms_pages = []
 	threads = []
 	WiktionaryCookie.WiktionaryCookie.set_anon_mode()
-	sys.stdout.write(word + " " * (50 - len(word)))
-	sys.stdout.flush()
-	#ti = time.time()
 	for dom in DOMS:
-		t = GetDomThread(dom, word)
+		t = GetDomWordsThread(dom, words)
 		threads.append(t)
 		t.start()
 
 	for t in threads:
 		t.join()
-		if t.error:
-			sys.stdout.write(colored("Error %s" % t.error_msg, "red"))
+		if not t.page:
+			sys.stdout.write(colored("Dom %s Error %s" % (t.dom, t.error_msg), "red"))
 			raise requests.ConnectionError
-		if t.has_page:
-			doms.append(t.dom)
-	#print time.time() - ti
+		doms_pages.append(t.page)
 	WiktionaryCookie.WiktionaryCookie.clear_anon_mode()
-	return doms
+	return doms_pages
+
+def iterate_words(words):
+	delay = 5
+	doms_words = []
+	# Fetch words per dom
+	while True:
+		sys.stdout.write(colored("Loading 50 words from external doms...", "yellow"))
+		sys.stdout.flush()
+		t = time.time()
+		try:
+			doms_pages = get_doms_pages(words)
+			print colored(" completed in %f" % (time.time() - t), "yellow")
+			break
+		except requests.ConnectionError:
+			print colored(" retrying in %d" % delay, "red")
+			time.sleep(delay)
+			delay *= 2
+
+	# Store doms per words in a dict
+	i = 0
+	words_doms = {}
+	for w in words:
+		words_doms[w] = []
+		for dom_pages in doms_pages:
+			key = dom_pages.key(w)
+			if dom_pages.valid(key):
+				words_doms[w].append(dom_pages.dom)
+		if not words_doms[w]:
+			sys.stdout.write(w + " " * (50 - len(w)))
+			print colored("No interlink", "blue")
+			del words_doms[w]
+
+	update_words_doms(words_doms)
 
 def iterate(it):
+	nr = 0
+	words = []
 	for i in it:
-		if "," in i:
+		if not i or "," in i or "+" in i or "*" in i:
 			continue
-		delay = 5
-		while True:
-			try:
-				doms = get_doms_async(i)
-				break
-			except requests.ConnectionError:
-				print colored(" retrying in %d" % delay, "red")
-				time.sleep(delay)
-				delay *= 2
-		if doms:
-			update_doms(i, doms)
-		else:
-			print colored("No interlink", "blue")
+		if nr == 50:
+			iterate_words(words)
+			words = []
+			nr = 0
+		words.append(i)
+		nr += 1
 
 def main():
-	#w = WiktionaryCookie.WiktionaryCookie()
-	#w.logout()
-	start = None
-	if options.start:
-		start = options.start.decode("utf-8")
-	it = FrenchCategoryRawIterator(options.cat.decode("utf-8"), start = start)
+	if options.input:
+		it = NounFileIterator(None, options.input)
+	else:
+		start = None
+		if options.start:
+			start = options.start.decode("utf-8")
+		it = FrenchCategoryRawIterator(options.cat.decode("utf-8"), start = start)
 	iterate(it)
 
 if __name__ == "__main__":

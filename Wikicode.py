@@ -65,12 +65,11 @@ class WikicodeFrench(object):
 		
 
 class Editor(object):
-	def __init__(self, noun):
-		# Get noun page
-		self.noun = FrenchNounPage.from_noun(noun)
-		self.basetimestamp = self.noun.revision_time()
-		self.old = self.noun.wikicode()
-		self.new = self.noun.wikicode()
+	def __init__(self, noun, wikicode, basetimestamp):
+		self.noun = noun
+		self.basetimestamp = basetimestamp
+		self.old = wikicode
+		self.new = wikicode
 
 	def add_translation_de(self, de, info):
 		w = WikicodeFrench(self.new)
@@ -78,11 +77,11 @@ class Editor(object):
 
 	def add_decl_1st(self):
 		w = WikicodeFrench(self.new)
-		self.new = w.add_decl_1st(self.noun.noun)
+		self.new = w.add_decl_1st(self.noun)
 
 	def update_doms(self, doms):
 		w = WikicodeFrench(self.new)
-		self.new = w.update_doms(self.noun.noun, doms)
+		self.new = w.update_doms(self.noun, doms)
 
 	def diff(self):
 		ret = ""
@@ -97,7 +96,7 @@ class Editor(object):
 		token = tkpage.json["query"]["tokens"]["csrftoken"]
 		post = {
 			"action" : "edit",
-			"title"  : self.noun.noun.encode("utf-8"),
+			"title"  : self.noun.encode("utf-8"),
 			"summary": summary,
 			"text"   : self.new.encode("utf-8"),
 			"basetimestamp" : self.basetimestamp,
@@ -106,8 +105,8 @@ class Editor(object):
 		}
 		url = "http://fr.wiktionary.org/w/api.php"
 		cookies = WiktionaryCookie.WiktionaryCookie.getInstance()
-		self.req = requests.post(url, data = post, cookies = cookies)
-		cookies.update(self.req.cookies)
+		req = requests.post(url, data = post, cookies = cookies)
+		cookies.update(req.cookies)
 
 class Creator(object):
 	def __init__(self, word, wikicode):

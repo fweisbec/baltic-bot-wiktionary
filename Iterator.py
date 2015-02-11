@@ -7,6 +7,8 @@ from Page import *
 class NounIterator(object):
 	def __init__(self, start):
 		self.start = start
+		self.idx = 0
+		self.started = False
 
 	def filtered(self, n):
 		if self.started:
@@ -18,8 +20,6 @@ class NounIterator(object):
 		return True
 
 	def __iter__(self):
-		self.idx = 0
-		self.started = False
 		return self
 
 	def next(self):
@@ -122,7 +122,7 @@ class FreqNounIterator(NounPageIterator):
 				return g[0]
 
 class FrenchCategoryRawIterator(NounPageIterator):
-	URL = u"http://fr.wiktionary.org/w/api.php?action=query&list=categorymembers&cmtitle=Catégorie:%s&format=json&cmlimit=200"
+	URL = u"http://fr.wiktionary.org/w/api.php?action=query&list=categorymembers&cmtitle=Catégorie:%s&format=json&cmlimit=500"
 
 	def __init__(self, cat, start = None):
 		#@cat = ex: "Noms communs en français")
