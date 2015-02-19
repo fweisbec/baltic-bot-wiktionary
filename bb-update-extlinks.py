@@ -17,7 +17,7 @@ DOMS = ("af", "am", "an", "ang", "ar", "ast", "az", \
 		"el", "en", "eo", "es", "et", "eu", \
 		"fa", "fi", "fj", "fo", "fy", \
 		"ga", "gd", "gl", "gn", "gu", "gv", \
-		"he", "hi", "hr", "hsb", "hu", "hy", \
+		"ha", "he", "hi", "hr", "hsb", "hu", "hy", \
 		"ia", "id", "ie", "ik", "io", "is", "it", "iu", \
 		"ja", "jbo", "jv", \
 		"ka", "kk", "kl", "km", "kn", "ko", "ks", "ku", "kw", "ky", \
@@ -39,15 +39,13 @@ DOMS = ("af", "am", "an", "ang", "ar", "ast", "az", \
 parser = optparse.OptionParser()
 parser.add_option("-c", "--category", type = "string", dest = "cat", default = "letton")
 parser.add_option("-i", "--input", type = "string", dest = "input", default = None)
+parser.add_option("-m", "--manual", type = "string", dest = "manual", default = "interlink_manual_en.log")
 parser.add_option("-s", "--start", type = "string", dest = "start", default = None)
 parser.add_option("-a", "--auto", action = "store_true", dest = "auto")
 parser.add_option("-f", "--force", action = "store_true", dest = "force")
 (options, args) = parser.parse_args()
 
 def diff_ignore(diff):
-	if options.force:
-		return False
-
 	if not diff:
 		return True
 
@@ -61,38 +59,52 @@ def diff_ignore(diff):
 	# If no add and no sub (except empty lines), change isn't worth
 	return True
 
+
 def diff_auto_accept(word, diff):
 	if options.force:
 		return False
-	empty = 0
-	interlinks = False
+
+	# Alias interlink need manual check
+	s = re.search(u"\[\[[a-z-]+:((?!%s)|(%s.+)).*\]\]" % (word, word), diff, re.U)
+	if s is not None:
+		return False
+
+	plus = []
+	minus = []
 	for line in diff.splitlines():
 		if line.startswith(("---", "+++")):
 			continue
 		if line.startswith("-"):
-			return False
+			minus.append(line[1:].rstrip())
 		if line.startswith("+"):
-			# One empty line above interlinks
-			if line.rstrip() == "+":
-				empty += 1
-				# No more than one empty line
-				if empty > 1:
-					return False
-				# No empty line after interlinks
-				if interlinks:
-					return False
-				continue
-			# Interlink
-			m = re.match(u"\+\[\[[a-z-]+:%s\]\]" % word, line, re.U)
-			if m is None:
-				return False
-			else:
-				interlinks = True
+			plus.append(line[1:].rstrip())
 
-	if empty > 0 and not interlinks:
-		return False
+	check_mirrored = []
+	has_interlinks = False
+	for line in minus:
+		# Empty line
+		if not line.strip():
+			continue
+		# Interlink
+		m = re.match(u"\[\[[a-z-]+:%s\]\]" % word, line, re.U)
+		if m is not None:
+			has_interlinks = True
+		if line in plus:	
+			plus.remove(line)
+		else:
+			return False
 
-	return True
+	for line in plus:
+		# Empty line
+		if not line.strip():
+			continue
+		# Only allow interlinks
+		m = re.match(u"\[\[[a-z-]+:%s\]\]" % word, line, re.U)
+		if m is None:
+			return False
+		has_interlinks = True
+
+	return has_interlinks
 
 def update_word_doms(word, wikicode, basetimestamp, doms):
 	e = Editor(word, wikicode, basetimestamp)
@@ -115,7 +127,7 @@ def update_word_doms(word, wikicode, basetimestamp, doms):
 
 	# Log non-trivial cases
 	if not options.force and options.auto:
-		log = open("interlink_manual.log", "a")
+		log = open(options.manual, "a")
 		print colored("Non trivial change: logged", "magenta")
 		log.write("\n" + word.encode("utf-8"))
 		log.close()
@@ -221,7 +233,7 @@ def iterate_words(words):
 	doms_words = []
 	# Fetch words per dom
 	while True:
-		sys.stdout.write(colored("Loading 50 words from external doms...", "yellow"))
+		sys.stdout.write(colored("Loading %d words from external doms..." % len(words), "yellow"))
 		sys.stdout.flush()
 		t = time.time()
 		try:
@@ -247,13 +259,14 @@ def iterate_words(words):
 			print colored("No interlink", "blue")
 			del words_doms[w]
 
+	# Update doms for words that need it
 	update_words_doms(words_doms)
 
 def iterate(it):
 	nr = 0
 	words = []
 	for i in it:
-		if not i or "," in i or "+" in i or "*" in i:
+		if not i or "," in i or "+" in i or "*" in i or "?" in i:
 			continue
 		if nr == 50:
 			iterate_words(words)
@@ -261,6 +274,9 @@ def iterate(it):
 			nr = 0
 		words.append(i)
 		nr += 1
+	# Less than 50 words remaining, flush them
+	if words:
+		iterate_words(words)
 
 def main():
 	if options.input:
