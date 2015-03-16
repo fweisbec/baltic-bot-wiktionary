@@ -39,17 +39,17 @@ DOMS = ("af", "am", "an", "ang", "ar", "ast", "az", \
 parser = optparse.OptionParser()
 parser.add_option("-c", "--category", type = "string", dest = "cat", default = "letton")
 parser.add_option("-i", "--input", type = "string", dest = "input", default = None)
-parser.add_option("-m", "--manual", type = "string", dest = "manual", default = "interlink_manual_en.log")
+parser.add_option("-m", "--manual", type = "string", dest = "manual", default = "interlink_manual.log")
 parser.add_option("-s", "--start", type = "string", dest = "start", default = None)
 parser.add_option("-a", "--auto", action = "store_true", dest = "auto")
 parser.add_option("-f", "--force", action = "store_true", dest = "force")
+parser.add_option("-n", "--number", type = "int", dest = "number", default = 50)
 (options, args) = parser.parse_args()
 
 def diff_ignore(diff):
 	if not diff:
 		return True
 
-	moins = 0
 	for line in diff.splitlines():
 		if line.startswith(("---", "+++")):
 			continue
@@ -106,6 +106,20 @@ def diff_auto_accept(word, diff):
 
 	return has_interlinks
 
+
+def commit(editor):
+        delay = 5
+        while True:
+                try:
+                        editor.commit(u"Update liens interwikis")
+                        break
+                except requests.RequestException as e:
+                        print colored(repr(e), "red")
+                        print colored(" retrying in %d" % delay, "red")
+                        time.sleep(delay)
+                        delay *= 2
+		
+
 def update_word_doms(word, wikicode, basetimestamp, doms):
 	e = Editor(word, wikicode, basetimestamp)
 	e.update_doms(doms)
@@ -118,7 +132,7 @@ def update_word_doms(word, wikicode, basetimestamp, doms):
 
 	# Auto commit trivial case
 	if diff_auto_accept(word, diff):
-		e.commit(u"Update liens interwikis")
+                commit(e)
 		print colored("Automatically committed!", "green")
 		log = open("interlink_auto.log", "a")
 		log.write("\n" + diff.encode("utf-8"))
@@ -139,8 +153,9 @@ def update_word_doms(word, wikicode, basetimestamp, doms):
 	if accept == "n":
 		return
 	elif not accept or accept in ("y", "Y"):
-		e.commit(u"Update liens externes")
-		print "Committed!"
+		delay = 5
+                commit(e)
+                print "Committed!"
 	else:
 		print "?"
 
@@ -161,7 +176,7 @@ def update_words_doms(words_doms):
 			else:
 				print colored(" completed in %f" % (time.time() - t), "yellow")
 				break
-		except exceptions.IOError as e:
+		except requests.RequestException as e:
 			print colored(repr(e), "red")
 
 		print colored(" retrying in %d" % delay, "red")
@@ -185,7 +200,7 @@ def update_words_doms(words_doms):
 				basetimestamp = pages.revision_time(key) 
 				update_word_doms(w, wikicode, basetimestamp, words_doms[w])
 				break
-			except exceptions.IOError as e:
+			except requests.RequestException as e:
 				print colored("Unable to commit edit, %s" % repr(e), "red")
 				time.sleep(delay)
 				delay *= 2
@@ -201,7 +216,7 @@ class GetDomWordsThread(Thread):
 	def run(self):
 		try:
 			p = TestPage.from_nouns_dom(self.words, self.dom)
-		except exceptions.IOError as e:
+		except requests.RequestException as e:
 			self.error_msg = repr(e)
 			return
 		# Error such as maxlag
@@ -240,7 +255,7 @@ def iterate_words(words):
 			doms_pages = get_doms_pages(words)
 			print colored(" completed in %f" % (time.time() - t), "yellow")
 			break
-		except requests.ConnectionError:
+		except requests.RequestException:
 			print colored(" retrying in %d" % delay, "red")
 			time.sleep(delay)
 			delay *= 2
@@ -252,6 +267,9 @@ def iterate_words(words):
 		words_doms[w] = []
 		for dom_pages in doms_pages:
 			key = dom_pages.key(w)
+			if key is None:
+				dom_pages.debug(w)
+				print dom_pages.json
 			if dom_pages.valid(key):
 				words_doms[w].append(dom_pages.dom)
 		if not words_doms[w]:
@@ -268,23 +286,23 @@ def iterate(it):
 	for i in it:
 		if not i or "," in i or "+" in i or "*" in i or "?" in i:
 			continue
-		if nr == 50:
+		if nr == options.number:
 			iterate_words(words)
 			words = []
 			nr = 0
 		words.append(i)
 		nr += 1
-	# Less than 50 words remaining, flush them
+	# Less than options.number words remaining, flush them
 	if words:
 		iterate_words(words)
 
 def main():
+	start = None
+	if options.start:
+		start = options.start.decode("utf-8")
 	if options.input:
-		it = NounFileIterator(None, options.input)
+		it = NounFileIterator(options.input, start)
 	else:
-		start = None
-		if options.start:
-			start = options.start.decode("utf-8")
 		it = FrenchCategoryRawIterator(options.cat.decode("utf-8"), start = start)
 	iterate(it)
 

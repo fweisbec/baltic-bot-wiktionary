@@ -32,10 +32,27 @@ class QueryPage(JsonPage):
 		JsonPage.__init__(self, url, dom)
 		self.noun = noun
 
-	def key(self, title):
+	def debug(self, title):
+		for k in self.json["query"]["pages"]:
+			print "%s %s" % (title,self.json["query"]["pages"][k]["title"])
+
+	def __key(self, title):
 		for k in self.json["query"]["pages"]:
 			if title == self.json["query"]["pages"][k]["title"]:
 				return k
+		return None
+
+	def key(self, title):
+		# Direct lookup
+		k = self.__key(title)
+		if k is not None:
+			return k
+
+		# Normalized lookup
+		if "normalized" in self.json["query"]:
+			for normalized in self.json["query"]["normalized"]:
+				if normalized["from"] == title:
+					return self.__key(normalized["to"])
 		return None
 			
 	def title(self, key):
@@ -121,6 +138,8 @@ class NounListPage(JsonPage):
 		self.nouns = [m["title"] for m in members if not self._filter_link(m["title"])]
 
 	def next(self):
+		if "query-continue" not in self.json:
+			raise StopIteration
 		cont = self.json["query-continue"]["categorymembers"]["cmcontinue"]
 		url = self.url.split("&cmcontinue=")[0]
 		url = "%s&cmcontinue=%s" % (url, cont)
