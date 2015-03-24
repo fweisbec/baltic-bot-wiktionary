@@ -10,7 +10,7 @@ from Wikicode import *
 from Page import *
 from Iterator import *
 
-DOMS = ("af", "am", "an", "ang", "ar", "ast", "az", \
+DOMS = ("af", "am", "an", "ang", "ar", "ast", "ay", "az", \
 		"be", "bg", "bn", "br", "bs", \
 		"ca", "chr", "co", "cs", "csb", "cy", \
 		"da", "de", "dv", \
@@ -24,7 +24,7 @@ DOMS = ("af", "am", "an", "ang", "ar", "ast", "az", \
 		"la", "lb", "li", "ln", "lo", "lt", "lv", \
 		"mg", "mi", "mk", "ml", "mn", "mr", "ms", "mt", "my", \
 		"na", "nah", "nds", "ne", "nl", "nn", "no", \
-		"oc", "om", \
+		"oc", "om", "or", \
 		"pa", "pl", "pnb", "ps", "pt", \
 		"qu", \
 		"ro", "roa-rup", "ru", "rw", \
@@ -108,16 +108,16 @@ def diff_auto_accept(word, diff):
 
 
 def commit(editor):
-        delay = 5
-        while True:
-                try:
-                        editor.commit(u"Update liens interwikis")
-                        break
-                except requests.RequestException as e:
-                        print colored(repr(e), "red")
-                        print colored(" retrying in %d" % delay, "red")
-                        time.sleep(delay)
-                        delay *= 2
+	delay = 5
+	while True:
+		try:
+			editor.commit(u"Update liens interwikis")
+			break
+		except requests.RequestException as e:
+			print colored(repr(e), "red")
+			print colored(" retrying in %d" % delay, "red")
+			time.sleep(delay)
+			delay *= 2
 		
 
 def update_word_doms(word, wikicode, basetimestamp, doms):
@@ -284,7 +284,7 @@ def iterate(it):
 	nr = 0
 	words = []
 	for i in it:
-		if not i or "," in i or "+" in i or "*" in i or "?" in i:
+		if not i or "," in i or "+" in i or "*" in i or "?" in i or "\\" in i:
 			continue
 		if nr == options.number:
 			iterate_words(words)
