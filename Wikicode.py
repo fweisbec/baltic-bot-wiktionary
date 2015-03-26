@@ -83,6 +83,12 @@ class Editor(object):
 		w = WikicodeFrench(self.new)
 		self.new = w.update_doms(self.noun, doms)
 
+	def replace(self, old, new):
+		self.new = self.new.replace(old, new)
+
+	def reg_replace(self, old, new):
+		self.new = re.sub(old, new, self.new, flags = re.U | re.M)
+
 	def diff(self):
 		ret = ""
 		old = self.old.splitlines()

@@ -37,8 +37,9 @@ DOMS = ("af", "am", "an", "ang", "ar", "ast", "ay", "az", \
 		"za", "zh", "zh-min-nan", "zu")
 
 parser = optparse.OptionParser()
-parser.add_option("-c", "--category", type = "string", dest = "cat", default = "letton")
+parser.add_option("-c", "--category", type = "string", dest = "cat", default = None)
 parser.add_option("-i", "--input", type = "string", dest = "input", default = None)
+parser.add_option("-r", "--recent-changes", type = "string", dest = "recent_changes_until", default = None) # ex: 2015-02-01T00:00:00Z
 parser.add_option("-m", "--manual", type = "string", dest = "manual", default = "interlink_manual.log")
 parser.add_option("-s", "--start", type = "string", dest = "start", default = None)
 parser.add_option("-a", "--auto", action = "store_true", dest = "auto")
@@ -302,8 +303,14 @@ def main():
 		start = options.start.decode("utf-8")
 	if options.input:
 		it = NounFileIterator(options.input, start)
-	else:
+	elif options.cat:
 		it = FrenchCategoryRawIterator(options.cat.decode("utf-8"), start = start)
+	elif options.recent_changes_until:
+		it = RecentChangesIterator(start = start, until = options.recent_changes_until.decode("utf-8"))
+	else:
+		print "Need either -i, -c or -r"
+		sys.exit(-1)
+
 	iterate(it)
 
 if __name__ == "__main__":

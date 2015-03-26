@@ -5,7 +5,7 @@ import re
 from Page import *
 
 class NounIterator(object):
-	def __init__(self, start):
+	def __init__(self, start = None):
 		self.start = start
 		self.idx = 0
 		self.started = False
@@ -30,10 +30,9 @@ class NounIterator(object):
 
 class NounPageIterator(NounIterator):
 	def _next(self):
-		if self.idx >= len(self.it.nouns):
+		while self.idx >= len(self.it.nouns):
 			self.it = self.it.next()
 			self.idx = 0
-			#assert len(self.it.nouns) == 0
 
 		nouns = self.it.nouns
 		n = nouns[self.idx]
@@ -131,4 +130,23 @@ class FrenchCategoryRawIterator(NounPageIterator):
 		
 	def __iter__(self):
 		self.it = FrenchCategoryPage(self.url)
+		return NounPageIterator.__iter__(self)
+
+class RecentChangesIterator(NounPageIterator):
+	def __init__(self, start = None, until = None):
+		NounPageIterator.__init__(self)
+		self.until = until
+		self.start = start
+
+	def __iter__(self):
+		self.it = RecentChangesPage(self.until)
+		return NounPageIterator.__iter__(self)
+
+class SearchIterator(NounPageIterator):
+	def __init__(self, search):
+		NounPageIterator.__init__(self)
+		self.search = search
+
+	def __iter__(self):
+		self.it = SearchPage(self.search)
 		return NounPageIterator.__iter__(self)

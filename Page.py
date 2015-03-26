@@ -158,3 +158,46 @@ class GermanNounListPage(NounListPage):
 class FrenchCategoryPage(NounListPage):
 	def _filter_link(self, links):
 		return False
+
+class RecentChangesPage(JsonPage):
+	def __init__(self, until = None, cont = None):
+		url = "http://fr.wiktionary.org/w/api.php?action=query&list=recentchanges&format=json&rclimit=500&rctype=new"
+		if until is not None:
+			url += "&rcend=" + until
+		if cont is not None:
+			url += "&rccontinue=" + cont
+		#print url
+		self.until = until
+		print url
+		JsonPage.__init__(self, url)
+		recentchanges = self.json["query"]["recentchanges"]
+		self.nouns = [m["title"] for m in recentchanges if not self.__filter(m["title"])]
+
+	def next(self):
+		if "query-continue" not in self.json:
+			raise StopIteration
+		cont = self.json["query-continue"]["recentchanges"]["rccontinue"]
+		return self.__class__(until = self.until, cont = cont)
+
+	def __filter(self, w):
+		if w.startswith("Discussion utilisateur:"):
+			return True
+		return False
+
+class SearchPage(JsonPage):
+	def __init__(self, search, cont = None):
+		url = "http://fr.wiktionary.org/w/api.php?action=query&format=json&list=search&srwhat=text"
+		url += "&srsearch=" + urllib.quote_plus(search.encode("utf8"))
+		if cont is not None:
+			url += "&sroffset=" + cont
+		self.search = search
+		#print url
+		JsonPage.__init__(self, url)
+		result = self.json["query"]["search"]
+		self.nouns = [r["title"] for r in result]
+
+	def next(self):
+		if "query-continue" not in self.json:
+			raise StopIteration
+		cont = str(self.json["query-continue"]["search"]["sroffset"])
+		return self.__class__(self.search, cont = cont)
