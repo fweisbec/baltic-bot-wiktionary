@@ -32,13 +32,19 @@ class QueryPage(JsonPage):
 		JsonPage.__init__(self, url, dom)
 		self.noun = noun
 
+	def page(self, key):
+		return self.json["query"]["pages"][key]
+			
+	def title(self, key):
+		return self.page(key)["title"]
+
 	def debug(self, title):
 		for k in self.json["query"]["pages"]:
-			print "%s %s" % (title,self.json["query"]["pages"][k]["title"])
+			print "%s %s" % (title, self.title(k))
 
 	def __key(self, title):
 		for k in self.json["query"]["pages"]:
-			if title == self.json["query"]["pages"][k]["title"]:
+			if title == self.title(k):
 				return k
 		return None
 
@@ -54,16 +60,19 @@ class QueryPage(JsonPage):
 				if normalized["from"] == title:
 					return self.__key(normalized["to"])
 		return None
-			
-	def title(self, key):
-		return self.json["query"]["pages"][key]["title"]
 
 	def valid(self, key):
-		status = self.json["query"]["pages"][key]
+		page = self.page(key)
 		for i in ("missing", "invalid"):
-			if i in status:
+			if i in page:
 				return False
 		return True
+
+	def missing(self, key):
+		return "missing" in self.page(key)
+
+	def invalid(self, key):
+		return "invalid" in self.page(key)
 
 class TestPage(QueryPage):
 	@classmethod
@@ -168,7 +177,6 @@ class RecentChangesPage(JsonPage):
 			url += "&rccontinue=" + cont
 		#print url
 		self.until = until
-		print url
 		JsonPage.__init__(self, url)
 		recentchanges = self.json["query"]["recentchanges"]
 		self.nouns = [m["title"] for m in recentchanges if not self.__filter(m["title"])]
@@ -186,13 +194,14 @@ class RecentChangesPage(JsonPage):
 
 class SearchPage(JsonPage):
 	def __init__(self, search, cont = None):
-		url = "http://fr.wiktionary.org/w/api.php?action=query&format=json&list=search&srwhat=text"
+		url = "http://fr.wiktionary.org/w/api.php?action=query&format=json&list=search&srwhat=text&srlimit=500"
 		url += "&srsearch=" + urllib.quote_plus(search.encode("utf8"))
 		if cont is not None:
 			url += "&sroffset=" + cont
 		self.search = search
 		#print url
 		JsonPage.__init__(self, url)
+		#print self.json
 		result = self.json["query"]["search"]
 		self.nouns = [r["title"] for r in result]
 

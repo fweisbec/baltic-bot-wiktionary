@@ -74,7 +74,7 @@ class EnglishNounPageIterator(NounPageIterator):
 		return EnglishNounPage.from_noun(n)
 
 class NounFileIterator(NounIterator):
-	def __init__(self, f, start):
+	def __init__(self, f, start = None):
 		NounIterator.__init__(self, start)
 		self.file = f
 		self.fp = open(f, "r")

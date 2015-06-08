@@ -28,7 +28,7 @@ lv_default_phonology = {
 	u"m" : u"m",
 	u"n" : u"n",
 	u"ņ" : u"ɲ",
-	u"o" : u"o",
+	u"o" : u"uo",
 	u"p" : u"p",
 	u"r" : u"r",
 	u"ŗ" : u"r",

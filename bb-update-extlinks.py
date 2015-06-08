@@ -133,7 +133,7 @@ def update_word_doms(word, wikicode, basetimestamp, doms):
 
 	# Auto commit trivial case
 	if diff_auto_accept(word, diff):
-                commit(e)
+		commit(e)
 		print colored("Automatically committed!", "green")
 		log = open("interlink_auto.log", "a")
 		log.write("\n" + diff.encode("utf-8"))
@@ -195,7 +195,13 @@ def update_words_doms(words_doms):
 					print colored("Unable to find key for %s" % w, "red")
 					sys.exit(-1)
 				if not pages.valid(key):
-					print colored("Invalid page for %s" % w, "red")
+					if pages.missing(key):
+						print colored("Missing page for %s" % w, "red")
+						break
+					elif pages.invalid(key):
+						print colored("Invalid page for %s" % w, "red")
+					else:
+						print colored("Weird page for %s" % w, "red")
 					sys.exit(-1)
 				wikicode = pages.wikicode(key)
 				basetimestamp = pages.revision_time(key) 

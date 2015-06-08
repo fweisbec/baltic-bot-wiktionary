@@ -86,8 +86,11 @@ class Editor(object):
 	def replace(self, old, new):
 		self.new = self.new.replace(old, new)
 
-	def reg_replace(self, old, new):
-		self.new = re.sub(old, new, self.new, flags = re.U | re.M)
+	def reg_replace(self, old, new, ignore_case):
+		flags = re.U | re.M
+		if ignore_case:
+			flags |= re.I
+		self.new = re.sub(old, new, self.new, flags = flags)
 
 	def diff(self):
 		ret = ""
@@ -119,21 +122,20 @@ class Creator(object):
 		self.word = word
 		self.wikicode = wikicode
 
-	def commit(self, summary):
+	def commit(self):
 		tkpage = JsonPage("http://fr.wiktionary.org/w/api.php?action=query&meta=tokens&format=json")
 		token = tkpage.json["query"]["tokens"]["csrftoken"]
 		post = {
 			"action" : "edit",
 			"title"  : self.word.encode("utf-8"),
-			"summary": summary.encode("utf-8"),
 			"text"   : self.wikicode.encode("utf-8"),
 			"createonly" : "1",
 			"token" : token
 		}
 		url = "http://fr.wiktionary.org/w/api.php"
 		cookies = WiktionaryCookie.WiktionaryCookie.getInstance()
-		self.req = requests.post(url, data = post, cookies = cookies)
-		cookies.update(self.req.cookies)
+		req = requests.post(url, data = post, cookies = cookies)
+		cookies.update(req.cookies)
 
 __code_test = """
 ==== {{S|synonymes}} ====
