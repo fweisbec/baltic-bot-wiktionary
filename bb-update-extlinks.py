@@ -40,6 +40,7 @@ parser = optparse.OptionParser()
 parser.add_option("-c", "--category", type = "string", dest = "cat", default = None)
 parser.add_option("-i", "--input", type = "string", dest = "input", default = None)
 parser.add_option("-r", "--recent-changes", type = "string", dest = "recent_changes_until", default = None) # ex: 2015-02-01T00:00:00Z
+parser.add_option("-d", "--domain", type = "string", dest = "domain", default = "fr") # domain from recent changes
 parser.add_option("-m", "--manual", type = "string", dest = "manual", default = "interlink_manual.log")
 parser.add_option("-s", "--start", type = "string", dest = "start", default = None)
 parser.add_option("-a", "--auto", action = "store_true", dest = "auto")
@@ -297,6 +298,7 @@ def iterate(it):
 			iterate_words(words)
 			words = []
 			nr = 0
+			#time.sleep(10)
 		words.append(i)
 		nr += 1
 	# Less than options.number words remaining, flush them
@@ -312,7 +314,7 @@ def main():
 	elif options.cat:
 		it = FrenchCategoryRawIterator(options.cat.decode("utf-8"), start = start)
 	elif options.recent_changes_until:
-		it = RecentChangesIterator(start = start, until = options.recent_changes_until.decode("utf-8"))
+		it = RecentChangesIterator(start = start, until = options.recent_changes_until.decode("utf-8"), domain = options.domain)
 	else:
 		print "Need either -i, -c or -r"
 		sys.exit(-1)

@@ -130,7 +130,8 @@ class Creator(object):
 			"title"  : self.word.encode("utf-8"),
 			"text"   : self.wikicode.encode("utf-8"),
 			"createonly" : "1",
-			"token" : token
+			"token" : token,
+			"bot"	: ""
 		}
 		url = "http://fr.wiktionary.org/w/api.php"
 		cookies = WiktionaryCookie.WiktionaryCookie.getInstance()
