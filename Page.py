@@ -133,6 +133,9 @@ class EnglishNounPage(NounPage):
 	def get_french(self):
 		return self._get_translations("\{\{t[+-]\|fr\|(.+?)(?:\|.+)?\}\}")
 
+class RussianNounPage(NounPage):
+	DOM = "ru"
+
 class GermanNounPage(NounPage):
 	DOM = "de"
 

@@ -122,7 +122,7 @@ class Creator(object):
 		self.word = word
 		self.wikicode = wikicode
 
-	def commit(self):
+	def commit(self, bot = False):
 		tkpage = JsonPage("http://fr.wiktionary.org/w/api.php?action=query&meta=tokens&format=json")
 		token = tkpage.json["query"]["tokens"]["csrftoken"]
 		post = {
@@ -131,8 +131,11 @@ class Creator(object):
 			"text"   : self.wikicode.encode("utf-8"),
 			"createonly" : "1",
 			"token" : token,
-			"bot"	: ""
 		}
+
+		if bot:
+			post["bot"] = ""
+
 		url = "http://fr.wiktionary.org/w/api.php"
 		cookies = WiktionaryCookie.WiktionaryCookie.getInstance()
 		req = requests.post(url, data = post, cookies = cookies)

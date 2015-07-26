@@ -39,7 +39,7 @@ DOMS = ("af", "am", "an", "ang", "ar", "ast", "ay", "az", \
 parser = optparse.OptionParser()
 parser.add_option("-c", "--category", type = "string", dest = "cat", default = None)
 parser.add_option("-i", "--input", type = "string", dest = "input", default = None)
-parser.add_option("-r", "--recent-changes", type = "string", dest = "recent_changes_until", default = None) # ex: 2015-02-01T00:00:00Z
+parser.add_option("-r", "--recent-changes", type = "string", dest = "recent_changes_until") # 2000-01-01T00:00:00Z
 parser.add_option("-d", "--domain", type = "string", dest = "domain", default = "fr") # domain from recent changes
 parser.add_option("-m", "--manual", type = "string", dest = "manual", default = "interlink_manual.log")
 parser.add_option("-s", "--start", type = "string", dest = "start", default = None)
@@ -251,9 +251,10 @@ def get_doms_pages(words):
 	WiktionaryCookie.WiktionaryCookie.clear_anon_mode()
 	return doms_pages
 
-def iterate_words(words):
+def try_to_iterate_words(words):
 	delay = 5
 	doms_words = []
+	retries = 0
 	# Fetch words per dom
 	while True:
 		sys.stdout.write(colored("Loading %d words from external doms..." % len(words), "yellow"))
@@ -267,6 +268,9 @@ def iterate_words(words):
 			print colored(" retrying in %d" % delay, "red")
 			time.sleep(delay)
 			delay *= 2
+			retries += 1
+			if len(words) > 1 and retries == 3:
+				return False
 
 	# Store doms per words in a dict
 	i = 0
@@ -287,6 +291,18 @@ def iterate_words(words):
 
 	# Update doms for words that need it
 	update_words_doms(words_doms)
+
+	return True
+
+def iterate_words(words):
+	delay = 5
+	# Often too many words produce URL too longs.
+	# On such case, to a dichotomic iteration
+	if not try_to_iterate_words(words):
+		assert(len(words) > 1)
+		iterate_words(words[:len(words)/2])
+		iterate_words(words[len(words)/2:])
+			
 
 def iterate(it):
 	nr = 0
