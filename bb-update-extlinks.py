@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf8 -*-
 
-import os, sys, requests, time, optparse, exceptions
+import os, sys, requests, time, optparse, exceptions, math
 from threading import Thread
 from termcolor import colored
 
@@ -294,24 +294,30 @@ def try_to_iterate_words(words):
 
 	return True
 
-def iterate_words(words):
+def iterate_words(words, nr):
 	delay = 5
+	length = len(words)
 	# Often too many words produce URL too longs.
 	# On such case, to a dichotomic iteration
-	if not try_to_iterate_words(words):
-		assert(len(words) > 1)
-		iterate_words(words[:len(words)/2])
-		iterate_words(words[len(words)/2:])
-			
+	if nr >= length:
+		if try_to_iterate_words(words):
+			return nr
+		else:
+			assert(len(words) > 1)
+			nr = math.ceil(nr / 2.0)
 
-def iterate(it):
+	nr = iterate_words(words[:length/2], nr)
+	nr = iterate_words(words[length/2:], nr)
+	return nr
+
+def iterate(it, number):
 	nr = 0
 	words = []
 	for i in it:
 		if not i or "," in i or "+" in i or "*" in i or "?" in i or "\\" in i:
 			continue
-		if nr == options.number:
-			iterate_words(words)
+		if nr == number:
+			number = iterate_words(words, number)
 			words = []
 			nr = 0
 			#time.sleep(10)
@@ -319,7 +325,7 @@ def iterate(it):
 		nr += 1
 	# Less than options.number words remaining, flush them
 	if words:
-		iterate_words(words)
+		iterate_words(words, number)
 
 def main():
 	start = None
@@ -335,7 +341,7 @@ def main():
 		print "Need either -i, -c or -r"
 		sys.exit(-1)
 
-	iterate(it)
+	iterate(it, options.number)
 
 if __name__ == "__main__":
 	main()
