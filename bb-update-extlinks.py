@@ -295,7 +295,6 @@ def try_to_iterate_words(words):
 	return True
 
 def iterate_words(words, nr):
-	delay = 5
 	length = len(words)
 	# Often too many words produce URL too longs.
 	# On such case, to a dichotomic iteration
@@ -303,7 +302,7 @@ def iterate_words(words, nr):
 		if try_to_iterate_words(words):
 			return nr
 		else:
-			assert(len(words) > 1)
+			assert(length > 1)
 			nr = math.ceil(nr / 2.0)
 
 	nr = iterate_words(words[:length/2], nr)

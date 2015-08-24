@@ -150,9 +150,9 @@ class NounListPage(JsonPage):
 		self.nouns = [m["title"] for m in members if not self._filter_link(m["title"])]
 
 	def next(self):
-		if "query-continue" not in self.json:
+		if "continue" not in self.json:
 			raise StopIteration
-		cont = self.json["query-continue"]["categorymembers"]["cmcontinue"]
+		cont = self.json["continue"]["cmcontinue"]
 		url = self.url.split("&cmcontinue=")[0]
 		url = "%s&cmcontinue=%s" % (url, cont)
 		return self.__class__(url)
@@ -178,7 +178,6 @@ class RecentChangesPage(JsonPage):
 			url += "&rcend=" + until
 		if cont is not None:
 			url += "&rccontinue=" + cont
-		#print url
 		self.until = until
 		self.domain = domain
 		JsonPage.__init__(self, url)
@@ -186,9 +185,9 @@ class RecentChangesPage(JsonPage):
 		self.nouns = [m["title"] for m in recentchanges if not self.__filter(m["title"])]
 
 	def next(self):
-		if "query-continue" not in self.json:
+		if "continue" not in self.json:
 			raise StopIteration
-		cont = self.json["query-continue"]["recentchanges"]["rccontinue"]
+		cont = self.json["continue"]["rccontinue"]
 		return self.__class__(until = self.until, cont = cont, domain = self.domain)
 
 	def __filter(self, w):
