@@ -45,7 +45,6 @@ parser.add_option("-m", "--manual", type = "string", dest = "manual", default = 
 parser.add_option("-s", "--start", type = "string", dest = "start", default = None)
 parser.add_option("-a", "--auto", action = "store_true", dest = "auto")
 parser.add_option("-f", "--force", action = "store_true", dest = "force")
-parser.add_option("-n", "--number", type = "int", dest = "number", default = 50)
 (options, args) = parser.parse_args()
 
 def diff_ignore(diff):
@@ -319,10 +318,9 @@ def iterate(it, number):
 			number = iterate_words(words, number)
 			words = []
 			nr = 0
-			#time.sleep(10)
 		words.append(i)
 		nr += 1
-	# Less than options.number words remaining, flush them
+	# Less than @number words remaining, flush them
 	if words:
 		iterate_words(words, number)
 
@@ -340,7 +338,7 @@ def main():
 		print "Need either -i, -c or -r"
 		sys.exit(-1)
 
-	iterate(it, options.number)
+	iterate(it, 50)
 
 if __name__ == "__main__":
 	main()
