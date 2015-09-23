@@ -172,12 +172,15 @@ class FrenchCategoryPage(NounListPage):
 		return False
 
 class RecentChangesPage(JsonPage):
-	def __init__(self, until = None, cont = None, domain = None):
+	def __init__(self, rcstart = None, until = None, cont = None, domain = None):
 		url = "http://%s.wiktionary.org/w/api.php?action=query&list=recentchanges&format=json&rclimit=500&rctype=new" % domain
+		if rcstart is not None:
+			url += "&rcstart=" + rcstart
 		if until is not None:
 			url += "&rcend=" + until
 		if cont is not None:
 			url += "&rccontinue=" + cont
+		self.rcstart = rcstart
 		self.until = until
 		self.domain = domain
 		JsonPage.__init__(self, url)
@@ -188,7 +191,7 @@ class RecentChangesPage(JsonPage):
 		if "continue" not in self.json:
 			raise StopIteration
 		cont = self.json["continue"]["rccontinue"]
-		return self.__class__(until = self.until, cont = cont, domain = self.domain)
+		return self.__class__(rcstart = self.rcstart, until = self.until, cont = cont, domain = self.domain)
 
 	def __filter(self, w):
 		if w.find(":") != -1:

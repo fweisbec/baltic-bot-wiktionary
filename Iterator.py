@@ -133,14 +133,14 @@ class FrenchCategoryRawIterator(NounPageIterator):
 		return NounPageIterator.__iter__(self)
 
 class RecentChangesIterator(NounPageIterator):
-	def __init__(self, start = None, until = None, domain = "fr"):
+	def __init__(self, rcstart = None, until = None, domain = "fr"):
 		NounPageIterator.__init__(self)
+		self.rcstart = rcstart
 		self.until = until
-		self.start = start
 		self.domain = domain
 
 	def __iter__(self):
-		self.it = RecentChangesPage(until = self.until, domain = self.domain)
+		self.it = RecentChangesPage(rcstart = self.rcstart, until = self.until, domain = self.domain)
 		return NounPageIterator.__iter__(self)
 
 class SearchIterator(NounPageIterator):

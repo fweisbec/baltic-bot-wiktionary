@@ -333,7 +333,7 @@ def main():
 	elif options.cat:
 		it = FrenchCategoryRawIterator(options.cat.decode("utf-8"), start = start)
 	elif options.recent_changes_until:
-		it = RecentChangesIterator(start = start, until = options.recent_changes_until.decode("utf-8"), domain = options.domain)
+		it = RecentChangesIterator(rcstart = start, until = options.recent_changes_until.decode("utf-8"), domain = options.domain)
 	else:
 		print "Need either -i, -c or -r"
 		sys.exit(-1)
