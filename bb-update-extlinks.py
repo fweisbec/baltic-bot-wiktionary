@@ -107,12 +107,40 @@ def diff_auto_accept(word, diff):
 
 	return has_interlinks
 
+def build_summary(word, editor):
+	summary = u"Update liens interwikis"
+	diff = editor.diff()
+	doms = {}
 
-def commit(editor):
+	for line in diff.splitlines():
+		m = re.match(u"([+-])\[\[([a-z-]+):%s\]\]\s*" % word, line, re.U)
+		if m is not None:
+			op = m.group(1)
+			dom = m.group(2)
+			if dom in doms:
+				if doms[dom] != op:
+					del doms[dom]
+			else:
+				doms[dom] = op
+	if doms:
+		summary += ": "
+		first = True
+		for dom in doms:
+			if not first:
+				summary += ", "
+			else:
+				first = False
+			summary += doms[dom] + dom
+
+	return summary
+
+
+def commit(word, editor):
 	delay = 5
+	summary = build_summary(word, editor)
 	while True:
 		try:
-			editor.commit(u"Update liens interwikis")
+			editor.commit(summary)
 			break
 		except requests.RequestException as e:
 			print colored(repr(e), "red")
@@ -133,7 +161,7 @@ def update_word_doms(word, wikicode, basetimestamp, doms):
 
 	# Auto commit trivial case
 	if diff_auto_accept(word, diff):
-		commit(e)
+		commit(word, e)
 		print colored("Automatically committed!", "green")
 		log = open("interlink_auto.log", "a")
 		log.write("\n" + diff.encode("utf-8"))
@@ -155,7 +183,7 @@ def update_word_doms(word, wikicode, basetimestamp, doms):
 		return
 	elif not accept or accept in ("y", "Y"):
 		delay = 5
-                commit(e)
+                commit(word, e)
                 print "Committed!"
 	else:
 		print "?"
