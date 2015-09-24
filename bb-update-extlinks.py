@@ -299,7 +299,7 @@ def iterate_words(words, nr):
 	# On such case, to a dichotomic iteration
 	if nr >= length:
 		if try_to_iterate_words(words):
-			return nr
+			return min(nr + 1, 50)
 		else:
 			assert(length > 1)
 			nr = math.ceil(nr / 2.0)
