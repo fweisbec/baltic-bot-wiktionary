@@ -366,7 +366,7 @@ def main():
 		print "Need either -i, -c or -r"
 		sys.exit(-1)
 
-	iterate(it, 50)
+	iterate(it, 10)
 
 if __name__ == "__main__":
 	main()
