@@ -47,6 +47,9 @@ parser.add_option("-a", "--auto", action = "store_true", dest = "auto")
 parser.add_option("-f", "--force", action = "store_true", dest = "force")
 (options, args) = parser.parse_args()
 
+def enc(s):
+	return s.encode("utf8")
+
 def diff_ignore(diff):
 	if not diff:
 		return True
@@ -214,22 +217,22 @@ def update_words_doms(words_doms):
 
 	# Update each word with uptodate doms
 	for w in words:
-		sys.stdout.write(w + " " * (50 - len(w)))
+		sys.stdout.write(enc(w) + " " * (50 - len(w)))
 		delay = 5
 		while True:
 			try:
 				key = pages.key(w)
 				if key is None:
-					print colored("Unable to find key for %s" % w, "red")
+					print colored("Unable to find key for %s" % enc(w), "red")
 					sys.exit(-1)
 				if not pages.valid(key):
 					if pages.missing(key):
-						print colored("Missing page for %s" % w, "red")
+						print colored("Missing page for %s" % enc(w), "red")
 						break
 					elif pages.invalid(key):
-						print colored("Invalid page for %s" % w, "red")
+						print colored("Invalid page for %s" % enc(w), "red")
 					else:
-						print colored("Weird page for %s" % w, "red")
+						print colored("Weird page for %s" % enc(w), "red")
 					sys.exit(-1)
 				wikicode = pages.wikicode(key)
 				basetimestamp = pages.revision_time(key) 
@@ -312,7 +315,7 @@ def try_to_iterate_words(words):
 			if dom_pages.valid(key):
 				words_doms[w].append(dom_pages.dom)
 		if not words_doms[w]:
-			sys.stdout.write(w + " " * (50 - len(w)))
+			sys.stdout.write(enc(w) + " " * (50 - len(w)))
 			print colored("No interlink", "blue")
 			del words_doms[w]
 
