@@ -43,7 +43,7 @@ class GermanNounPageIterator(NounPageIterator):
 	URL = "http://de.wiktionary.org/w/api.php?action=query&list=categorymembers&cmtitle=Kategorie:Substantiv_(Deutsch)&format=json"
 
 	def __iter__(self):
-		self.it = GermanNounListPage(self.URL)
+		self.it = NounListPage(self.URL)
 		return NounPageIterator.__iter__(self)
 
 	def next(self):
@@ -59,7 +59,7 @@ class GermanNounPageRawIterator(NounPageIterator):
 		NounPageIterator.__init__(self, start)
 		
 	def __iter__(self):
-		self.it = GermanNounListPage(self.url)
+		self.it = NounListPage(self.url)
 		return NounPageIterator.__iter__(self)
 
 class EnglishNounPageIterator(NounPageIterator):
@@ -120,17 +120,26 @@ class FreqNounIterator(NounPageIterator):
 					self.remain = g[1]
 				return g[0]
 
-class FrenchCategoryRawIterator(NounPageIterator):
-	URL = u"http://fr.wiktionary.org/w/api.php?action=query&list=categorymembers&cmtitle=Catégorie:%s&format=json&cmlimit=500"
+class CategoryRawIterator(NounPageIterator):
+	URL = u"http://%s.wiktionary.org/w/api.php?action=query&list=categorymembers&cmtitle=%s:%s&format=json&cmlimit=500"
 
-	def __init__(self, cat, start = None):
-		#@cat = ex: "Noms communs en français")
-		self.url = self.URL % cat
+	def __init__(self, dom, catword, cat, start):
+		self.url = self.URL % (dom, catword, cat)
 		NounPageIterator.__init__(self, start)
 		
 	def __iter__(self):
-		self.it = FrenchCategoryPage(self.url)
+		self.it = NounListPage(self.url)
 		return NounPageIterator.__iter__(self)
+
+class FrenchCategoryRawIterator(CategoryRawIterator):
+	def __init__(self, cat, start = None):
+		#@cat = ex: "Noms communs en français")
+		return CategoryRawIterator.__init__(self, u"fr", u"Catégorie", cat, start)
+
+class SpanishCategoryRawIterator(CategoryRawIterator):
+	def __init__(self, cat, start = None):
+		#@cat = ex: "Noms communs en français")
+		return CategoryRawIterator.__init__(self, u"es", u"Categoría", cat, start)
 
 class RecentChangesIterator(NounPageIterator):
 	def __init__(self, rcstart = None, until = None, domain = "fr"):

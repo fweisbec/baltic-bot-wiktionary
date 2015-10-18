@@ -1,21 +1,29 @@
 #!/usr/bin/python
 # -*- coding: utf8 -*-
 
-import os, sys
+import os, sys, optparse
 
 import WiktionaryCookie
 from Wikicode import *
 from Page import *
 from Iterator import *
 
-def main():
-	if len(sys.argv) != 2:
-		# ex: ./bb-dump-category.py "Noms communs en français"
-		print "usage: %s <categorie>" % sys.argv[0]
+parser = optparse.OptionParser()
+parser.add_option("-l", "--lang", type = "string", dest = "lang")
+parser.add_option("-c", "--categorie", type = "string", dest = "categorie")
+(options, args) = parser.parse_args()
+
+def main():	
+	lang = options.lang.decode("utf-8")
+	cat = options.categorie.decode("utf-8")
+
+	if lang == "fr":
+		it = FrenchCategoryRawIterator(cat)
+	elif lang == "es":
+		it = SpanishCategoryRawIterator(cat)
+	else:
+		print "???"
 		return
-	
-	cat = sys.argv[1].decode("utf-8")
-	it = FrenchCategoryRawIterator(cat)
 
 	for i in it:
 		sys.stdout.write(i.encode("utf8"))

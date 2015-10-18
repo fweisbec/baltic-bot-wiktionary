@@ -156,19 +156,14 @@ class NounListPage(JsonPage):
 		url = self.url.split("&cmcontinue=")[0]
 		url = "%s&cmcontinue=%s" % (url, cont)
 		return self.__class__(url)
+
+	def _filter_link(self, links):
+		return False
 	
 class EnglishNounListPage(NounListPage):
 	def _filter_link(self, links):
 		if links.startswith(("Category:", "Wiktionary:", "Special:", "Category_talk:", "Appendix:")):
 			return True
-		return False
-
-class GermanNounListPage(NounListPage):
-	def _filter_link(self, links):
-		return False
-
-class FrenchCategoryPage(NounListPage):
-	def _filter_link(self, links):
 		return False
 
 class RecentChangesPage(JsonPage):
