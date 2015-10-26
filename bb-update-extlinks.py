@@ -10,10 +10,10 @@ from Wikicode import *
 from Page import *
 from Iterator import *
 
-DOMS = ("af", "am", "an", "ang", "ar", "ast", "ay", "az", \
-		"be", "bg", "bn", "br", "bs", \
-		"ca", "chr", "co", "cs", "csb", "cy", \
-		"da", "de", "dv", \
+DOMS = ("aa", "ab", "af", "ak", "als", "am", "an", "ang", "ar", "as", "ast", "av", "ay", "az", \
+		"be", "bg", "bh", "bi", "bm", "bn", "bo", "br", "bs", \
+		"ca", "ch", "chr", "co", "cr", "cs", "csb", "cy", \
+		"da", "de", "dv", "dz", \
 		"el", "en", "eo", "es", "et", "eu", \
 		"fa", "fi", "fj", "fo", "fy", \
 		"ga", "gd", "gl", "gn", "gu", "gv", \
@@ -22,18 +22,19 @@ DOMS = ("af", "am", "an", "ang", "ar", "ast", "ay", "az", \
 		"ja", "jbo", "jv", \
 		"ka", "kk", "kl", "km", "kn", "ko", "ks", "ku", "kw", "ky", \
 		"la", "lb", "li", "ln", "lo", "lt", "lv", \
-		"mg", "mi", "mk", "ml", "mn", "mr", "ms", "mt", "my", \
+		"mg", "mh", "mi", "mk", "ml", "mn", "mo", "mr", "ms", "mt", "my", \
 		"na", "nah", "nds", "ne", "nl", "nn", "no", \
 		"oc", "om", "or", \
-		"pa", "pl", "pnb", "ps", "pt", \
+		"pa", "pi", "pl", "pnb", "ps", "pt", \
 		"qu", \
-		"ro", "roa-rup", "ru", "rw", \
-		"sa", "scn", "sd", "sg", "sh", "si", "simple", "sk", "sl", "sm", "so", "sq", "sr", "ss", "st", "su", "sv", "sw", \
-		"ta", "te", "tg", "th", "ti", "tk", "tl", "tn", "tpi", "tr", "ts", "tt", \
+		"rm", "rn", "ro", "roa-rup", "ru", "rw", \
+		"sa", "sc", "scn", "sd", "sg", "sh", "si", "simple", "sk", "sl", "sm", "sn", "so", "sq", "sr", "ss", "st", "su", "sv", "sw", \
+		"ta", "te", "tg", "th", "ti", "tk", "tl", "tn", "to", "tpi", "tr", "ts", "tt", "tw", \
 		"ug", "uk", "ur", "uz", \
 		"vec", "vi", "vo", \
 		"wa", "wo", \
-		"yi", \
+		"xh", \
+		"yi", "yo", \
 		"za", "zh", "zh-min-nan", "zu")
 
 parser = optparse.OptionParser()
