@@ -74,10 +74,9 @@ class EnglishNounPageIterator(NounPageIterator):
 		return EnglishNounPage.from_noun(n)
 
 class NounFileIterator(NounIterator):
-	def __init__(self, f, start = None):
+	def __init__(self, fp, start = None):
+		self.fp = fp
 		NounIterator.__init__(self, start)
-		self.file = f
-		self.fp = open(f, "r")
 
 	def __iter__(self):
 		NounIterator.__iter__(self)
@@ -87,9 +86,14 @@ class NounFileIterator(NounIterator):
 	def _next(self):
 		return self.it.next().strip().decode("utf-8")
 
-class GermanNounFileIterator(NounFileIterator):
+class NounFileNameIterator(NounFileIterator):
+	def __init__(self, f, start = None):
+		self.fp = open(f, "r")
+		NounFileIterator.__init__(self, self.fp, start)
+
+class GermanNounFileNameIterator(NounFileIterator):
 	def next(self):
-		n = NounFileIterator.next(self)
+		n = NounFileNameIterator.next(self)
 		return GermanNounPage.from_noun(n)
 
 class FreqNounIterator(NounPageIterator):

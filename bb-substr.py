@@ -94,7 +94,7 @@ def main():
 	elif options.category:
 		it = FrenchCategoryRawIterator(options.category.decode("utf8"))
 	elif options.input:
-		it = NounFileIterator(options.input)
+		it = NounFileNameIterator(options.input)
 
 	titles = []
 	for i in it:

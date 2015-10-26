@@ -64,7 +64,7 @@ def main3():
 	file = sys.argv[1]
 	if len(sys.argv) == 3:
 		start = sys.argv[2]
-	it = GermanNounFileIterator(start, file)
+	it = GermanNounFileNameIterator(start, file)
 	for i in it:
 		sys.stdout.write("\r%s" %  (" " * 100))
 		sys.stdout.write("\r%s" % i.noun)

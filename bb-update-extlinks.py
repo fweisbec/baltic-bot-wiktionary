@@ -360,7 +360,7 @@ def main():
 	if options.start:
 		start = options.start.decode("utf-8")
 	if options.input:
-		it = NounFileIterator(options.input, start)
+		it = NounFileNameIterator(options.input, start)
 	elif options.cat:
 		it = FrenchCategoryRawIterator(options.cat.decode("utf-8"), start = start)
 	elif options.recent_changes_until:

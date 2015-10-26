@@ -62,7 +62,35 @@ class WikicodeFrench(object):
 		for dom in doms:
 			txt += u"[[%s:%s]]\n" % (dom, word)
 		return txt
-		
+
+	def add_category(self, cat):
+		parsed = mwparserfromhell.parse(self.wikicode)
+		section = parsed.get_sections(matches = lambda x: u"langue" in x and u"es" in x)
+		if not section:
+			return parsed
+
+		section = section[0]
+		i = 0
+
+		line = True
+		while True:
+			i -= 1
+			prev = section.get(i)
+			if prev.startswith(u"[[Catégorie"):
+				line = False
+				break
+			if re.match("\s+", prev.encode("utf8").decode("utf8"), re.U | re.M):
+				continue
+			if re.match("\[\[[a-z-]+:(.+?)\]\]\s*", prev.encode("utf8").decode("utf8"), re.S | re.U | re.M):
+				continue
+			break
+
+		insert = "\n" + cat + "\n\n"
+		if line:
+			insert = "\n" + insert
+		section.insert_after(prev, insert)
+			
+		return parsed
 
 class Editor(object):
 	def __init__(self, noun, wikicode, basetimestamp):
@@ -99,6 +127,16 @@ class Editor(object):
 		for line in difflib.unified_diff(old, new):
 			ret += line + "\n"
 		return ret
+
+	def add_category(self, cat):
+		txt = self.new
+		cat = u"[[Catégorie:%s]]" % cat
+		if cat in txt:
+			return False
+		w = WikicodeFrench(self.new)
+		self.new = w.add_category(cat)
+
+		return True
 
 	def commit(self, summary):
 		tkpage = JsonPage("http://fr.wiktionary.org/w/api.php?action=query&meta=tokens&format=json")
