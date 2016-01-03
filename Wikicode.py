@@ -179,6 +179,29 @@ class Creator(object):
 		req = requests.post(url, data = post, cookies = cookies)
 		cookies.update(req.cookies)
 
+class Renamer(object):
+	def __init__(self, old, new):
+		self.old = old
+		self.new = new
+
+	def commit(self, summary):
+		tkpage = JsonPage("http://fr.wiktionary.org/w/api.php?action=query&meta=tokens&format=json")
+		token = tkpage.json["query"]["tokens"]["csrftoken"]
+		post = {
+			"action"		: "move",
+			"from"			: self.old.encode("utf-8"),
+			"to"			: self.new.encode("utf-8"),
+			"movetalk"		: "",
+			"movesubpages"	: "",
+			"reason"		: summary,
+			"token"			: token,
+		}
+		url = "http://fr.wiktionary.org/w/api.php"
+		cookies = WiktionaryCookie.WiktionaryCookie.getInstance()
+		req = requests.post(url, data = post, cookies = cookies)
+		cookies.update(req.cookies)
+
+
 __code_test = """
 ==== {{S|synonymes}} ====
 * [[froideur]]
