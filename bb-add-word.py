@@ -57,7 +57,7 @@ class FrRuWikicode(FrWikicode):
 
 class FrRuVerbWikicode(FrRuWikicode):
 	def etym(self):
-		prefixes = (u"пере", u"про", u"под", u"вы", u"вз", u"вс", u"по", u"до", u"об", u"в", u"у", u"с")
+		prefixes = (u"пере", u"про", u"под", u"вы", u"вз", u"вс", u"по", u"до", u"об", u"за", u"в", u"у", u"с")
 
 		for prefix in prefixes:
 			if self.word.startswith(prefix):
