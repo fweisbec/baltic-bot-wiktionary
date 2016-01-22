@@ -77,7 +77,7 @@ class QueryPage(JsonPage):
 class TestPage(QueryPage):
 	@classmethod
 	def from_nouns_dom(cls, nouns, dom):
-		base_url = "http://" + dom + ".wiktionary.org/w/api.php?format=json&action=query&titles=%s"
+		base_url = "https://" + dom + ".wiktionary.org/w/api.php?format=json&action=query&titles=%s"
 		http_nouns = "|".join([urllib.quote_plus(noun.encode("utf8")) for noun in nouns])
 		url = base_url % http_nouns 
 		return cls(noun, url, dom)
@@ -85,7 +85,7 @@ class TestPage(QueryPage):
 class NounPage(QueryPage):
 	@classmethod
 	def from_nouns_dom(cls, nouns, dom):
-		base_url = "http://" + dom + ".wiktionary.org/w/api.php?format=json&action=query&titles=%s&prop=revisions&rvprop=content|timestamp"
+		base_url = "https://" + dom + ".wiktionary.org/w/api.php?format=json&action=query&titles=%s&prop=revisions&rvprop=content|timestamp"
 		http_nouns = "|".join([urllib.quote_plus(noun.encode("utf8")) for noun in nouns])
 		url = base_url % http_nouns 
 		return cls(noun, url, dom)
@@ -168,7 +168,7 @@ class EnglishNounListPage(NounListPage):
 
 class RecentChangesPage(JsonPage):
 	def __init__(self, rcstart = None, until = None, cont = None, domain = None):
-		url = "http://%s.wiktionary.org/w/api.php?action=query&list=recentchanges&format=json&rclimit=500&rctype=new" % domain
+		url = "https://%s.wiktionary.org/w/api.php?action=query&list=recentchanges&format=json&rclimit=500&rctype=new" % domain
 		if rcstart is not None:
 			url += "&rcstart=" + rcstart
 		if until is not None:
@@ -196,19 +196,17 @@ class RecentChangesPage(JsonPage):
 
 class SearchPage(JsonPage):
 	def __init__(self, search, cont = None):
-		url = "http://fr.wiktionary.org/w/api.php?action=query&format=json&list=search&srwhat=text&srlimit=500"
+		url = "https://fr.wiktionary.org/w/api.php?action=query&format=json&list=search&srwhat=text&srlimit=500"
 		url += "&srsearch=" + urllib.quote_plus(search.encode("utf8"))
 		if cont is not None:
 			url += "&sroffset=" + cont
 		self.search = search
-		#print url
 		JsonPage.__init__(self, url)
-		#print self.json
 		result = self.json["query"]["search"]
 		self.nouns = [r["title"] for r in result]
 
 	def next(self):
-		if "query-continue" not in self.json:
+		if "continue" not in self.json:
 			raise StopIteration
-		cont = str(self.json["query-continue"]["search"]["sroffset"])
+		cont = str(self.json["continue"]["sroffset"])
 		return self.__class__(self.search, cont = cont)

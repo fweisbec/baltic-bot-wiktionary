@@ -12,9 +12,10 @@ from Iterator import *
 # {{Requête fait}}
 # {{Bot fait|Baltic Bot|Shalott}} ~~~~~
 
-OLD = [u"""# Bot pour générer les formes conjuguées pour le 1er groupe espagnol (régulier)"""]
-NEW = u"""# Bot pour générer les formes conjuguées"""
-REGEX = False
+#OLD = [u"""(\{\s*\{ru-déclf\s*\|.*?)(\|\w+-=[^|}]*)([^}]*)"""]
+OLD = [u"""(\{\s*\{ru-décln\s*\|.*?)(\|\w+-=[^|}]*)(.*?\}\})"""]
+NEW = r"""\1\3"""
+REGEX = True
 
 parser = optparse.OptionParser()
 parser.add_option("-a", "--auto", action = "store_true", dest = "auto", default = False)
@@ -51,7 +52,8 @@ def process_one(p, title, old, new):
 	basetimestamp = p.revision_time(key)
 	e = Editor(title, wikicode, basetimestamp)
 	if REGEX:
-		e.reg_replace(old, new, options.ignore_case)
+		while e.reg_replace(old, new, options.ignore_case):
+			continue
 	else:
 		e.replace(old, new)
 	diff = e.diff()

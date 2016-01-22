@@ -115,10 +115,15 @@ class Editor(object):
 		self.new = self.new.replace(old, new)
 
 	def reg_replace(self, old, new, ignore_case):
-		flags = re.U | re.M
+		flags = re.U | re.M | re.S
 		if ignore_case:
 			flags |= re.I
+		prev = self.new
 		self.new = re.sub(old, new, self.new, flags = flags)
+		if prev == self.new:
+			return False
+		else:
+			return True
 
 	def diff(self):
 		ret = ""
@@ -139,7 +144,7 @@ class Editor(object):
 		return True
 
 	def commit(self, summary):
-		tkpage = JsonPage("http://fr.wiktionary.org/w/api.php?action=query&meta=tokens&format=json")
+		tkpage = JsonPage("https://fr.wiktionary.org/w/api.php?action=query&meta=tokens&format=json")
 		token = tkpage.json["query"]["tokens"]["csrftoken"]
 		post = {
 			"action" : "edit",
@@ -150,7 +155,7 @@ class Editor(object):
 			"token" : token,
 			"bot"	: ""
 		}
-		url = "http://fr.wiktionary.org/w/api.php"
+		url = "https://fr.wiktionary.org/w/api.php"
 		cookies = WiktionaryCookie.WiktionaryCookie.getInstance()
 		req = requests.post(url, data = post, cookies = cookies)
 		cookies.update(req.cookies)
@@ -161,7 +166,7 @@ class Creator(object):
 		self.wikicode = wikicode
 
 	def commit(self, bot = False):
-		tkpage = JsonPage("http://fr.wiktionary.org/w/api.php?action=query&meta=tokens&format=json")
+		tkpage = JsonPage("https://fr.wiktionary.org/w/api.php?action=query&meta=tokens&format=json")
 		token = tkpage.json["query"]["tokens"]["csrftoken"]
 		post = {
 			"action" : "edit",
@@ -174,7 +179,7 @@ class Creator(object):
 		if bot:
 			post["bot"] = ""
 
-		url = "http://fr.wiktionary.org/w/api.php"
+		url = "https://fr.wiktionary.org/w/api.php"
 		cookies = WiktionaryCookie.WiktionaryCookie.getInstance()
 		req = requests.post(url, data = post, cookies = cookies)
 		cookies.update(req.cookies)
@@ -185,7 +190,7 @@ class Renamer(object):
 		self.new = new
 
 	def commit(self, summary):
-		tkpage = JsonPage("http://fr.wiktionary.org/w/api.php?action=query&meta=tokens&format=json")
+		tkpage = JsonPage("https://fr.wiktionary.org/w/api.php?action=query&meta=tokens&format=json")
 		token = tkpage.json["query"]["tokens"]["csrftoken"]
 		post = {
 			"action"		: "move",
@@ -196,7 +201,7 @@ class Renamer(object):
 			"reason"		: summary,
 			"token"			: token,
 		}
-		url = "http://fr.wiktionary.org/w/api.php"
+		url = "https://fr.wiktionary.org/w/api.php"
 		cookies = WiktionaryCookie.WiktionaryCookie.getInstance()
 		req = requests.post(url, data = post, cookies = cookies)
 		cookies.update(req.cookies)

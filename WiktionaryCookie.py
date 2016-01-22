@@ -4,14 +4,14 @@
 import requests
 import WikiLogin
 
-class WiktionaryCookie(dict):
+class WiktionaryCookie(requests.cookies.RequestsCookieJar):
 	_instance = None
 	_anon_mode = False
 
 	@staticmethod
 	def getInstance():
 		if WiktionaryCookie._anon_mode:
-			return dict()
+			return requests.cookies.RequestsCookieJar()
 		if not WiktionaryCookie._instance:
 			WiktionaryCookie._instance = WiktionaryCookie()
 		return WiktionaryCookie._instance
@@ -25,12 +25,13 @@ class WiktionaryCookie(dict):
 		WiktionaryCookie._anon_mode = False
 
 	def __init__(self):
+		requests.cookies.RequestsCookieJar.__init__(self)
 		data = {"action" : "login", "lgname" : WikiLogin.USER, "lgpassword" : WikiLogin.PASS, "format" : "json"}
-		r = requests.post("http://fr.wiktionary.org/w/api.php", data = data)
+		r = requests.post("https://fr.wiktionary.org/w/api.php", data = data)
 		cookies = r.cookies
 		token = r.json()["login"]["token"]
 		data["lgtoken"] = token
-		r = requests.post("http://fr.wiktionary.org/w/api.php", data = data, cookies = cookies)
+		r = requests.post("https://fr.wiktionary.org/w/api.php", data = data, cookies = cookies)
 		self.update(r.cookies)
 
 	def logout(self):
