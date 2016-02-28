@@ -46,6 +46,7 @@ parser.add_option("-m", "--manual", type = "string", dest = "manual", default = 
 parser.add_option("-s", "--start", type = "string", dest = "start", default = None)
 parser.add_option("-a", "--auto", action = "store_true", dest = "auto")
 parser.add_option("-f", "--force", action = "store_true", dest = "force")
+parser.add_option("--dry-run", action = "store_true", dest = "dry_run")
 (options, args) = parser.parse_args()
 
 def enc(s):
@@ -144,7 +145,8 @@ def commit(word, editor):
 	summary = build_summary(word, editor)
 	while True:
 		try:
-			editor.commit(summary)
+			if not options.dry_run:
+				editor.commit(summary)
 			break
 		except requests.RequestException as e:
 			print colored(repr(e), "red")
