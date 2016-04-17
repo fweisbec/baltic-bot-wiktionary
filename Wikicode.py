@@ -112,7 +112,12 @@ class Editor(object):
 		self.new = w.update_doms(self.noun, doms)
 
 	def replace(self, old, new):
+		prev = self.new
 		self.new = self.new.replace(old, new)
+		if prev == self.new:
+			return False
+		else:
+			return True
 
 	def reg_replace(self, old, new, ignore_case):
 		flags = re.U | re.M | re.S

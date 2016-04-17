@@ -12,10 +12,19 @@ from Iterator import *
 # {{Requête fait}}
 # {{Bot fait|Baltic Bot|Shalott}} ~~~~~
 
-#OLD = [u"""(\{\s*\{ru-déclf\s*\|.*?)(\|\w+-=[^|}]*)([^}]*)"""]
-OLD = [u"""(\{\s*\{ru-décln\s*\|.*?)(\|\w+-=[^|}]*)(.*?\}\})"""]
-NEW = r"""\1\3"""
+OLD = [u"""(\{\s*\{ru-décl-loc\s*\|.*?)(\|\w+-=[^|}]*)([^}]*)"""]
+NEW = u"\\1\\3"
 REGEX = True
+#OLD = [u"""\u200e""", u"""\u200f"""]
+#NEW = u""""""
+#REGEX = False
+#OLD = [u"""\[\[Catégorie:([a-zA-ZÉéèàñá:’'| ]+)[\u200f\u200e]+\]\]"""]
+#NEW = u"""[[Catégorie:\\1]]"""
+#OLD = [u"""L’étymologie de ces mots en \[\[([a-zA-ZÉéèàñá:’| ]+)[\u200f\u200e]+\]\] n’a pas été précisée, merci d’y remédier si vous la connaissez."""]
+#NEW = u"""L’étymologie de ces mots en [[\\1]] n’a pas été précisée, merci d’y remédier si vous la connaissez."""
+#OLD = [u"""(\s[a-zA-ZÉéèëêàáãâ‏ũúùçñïíöóôü‏:’'-| ]+)[\u200f\u200e]+(\||\.|\s|(\]\]))"""]
+#NEW = u"""\\1\\2"""
+#REGEX = True
 
 parser = optparse.OptionParser()
 parser.add_option("-a", "--auto", action = "store_true", dest = "auto", default = False)
@@ -55,7 +64,8 @@ def process_one(p, title, old, new):
 		while e.reg_replace(old, new, options.ignore_case):
 			continue
 	else:
-		e.replace(old, new)
+		while e.replace(old, new):
+			continue
 	diff = e.diff()
 	if not diff:
 		return False
