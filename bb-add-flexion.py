@@ -7,6 +7,7 @@ import WiktionaryCookie
 from Wikicode import *
 from Page import *
 from html.fr import *
+from html.ru import *
 import ru
 
 parser = optparse.OptionParser()
@@ -127,8 +128,15 @@ def main():
 			print "-g with -f and -c ?"
 			return
 		if options.lang == "ru":
-			html = HtmlFrRu(base)
-			for (flexion, flexion_dict) in html.flexions_args():
+			ru_html = HtmlRuRu(base)
+			fr_html = HtmlFrRu(base)
+			# Check that fr. and ru. flexions do match
+			if fr_html.flexions() == ru_html.flexions():
+				print "Flexions in ru. match .fr"
+			else:
+				print "Flexions in ru. don't match .fr"
+				return
+			for (flexion, flexion_dict) in fr_html.flexions_args():
 				add_flexion(base, flexion, flexion_dict)
 	else:
 		cases = [c.strip() for c in cases.split(",")]

@@ -2,17 +2,18 @@
 # -*- coding: utf8 -*-
 
 import requests, re
+from flexions.flexions import *
 
 class HtmlFrRu:
 	cases = { \
-		 u"Nominatif"       : "n", \
-		 u"Génitif"         : "g", \
-		 u"Datif"           : "d", \
-		 u"Accusatif"       : "a", \
-		 u"Instrumental"    : "i", \
-		 u"Prépositionnel"  : "l", \
-		 u"Vocatif"         : "v", \
-		 u"Partitif"        : "p"  \
+		 u"Nominatif"       : ("n", NominatifCase),		\
+		 u"Génitif"         : ("g", GenitifCase),		\
+		 u"Datif"           : ("d", DatifCase),			\
+		 u"Accusatif"       : ("a", AccusatifCase),		\
+		 u"Instrumental"    : ("i", InstrumentalCase),	\
+		 u"Prépositionnel"  : ("l", PrepositionnelCase),\
+		 u"Vocatif"         : ("v", VocatifCase),		\
+		 u"Partitif"        : ("p", PartitifCase)		\
 	}
 		
 	def __init__(self, word):
@@ -40,35 +41,23 @@ class HtmlFrRu:
 			return ([s.group(1)], [s.group(2)])
 		return None
 
-	@classmethod
-	def prepare_flexion(cls, is_plur, couple, case, flexions):
-		if is_plur:
-			idx = 1
-			c = "p"
-		else:
-			idx = 0
-			c = "s"
-			
-		for flexion_acc in couple[idx]:
-			flexion = flexion_acc.replace(u'\u0301', "")
-			arg = "%sx%s" % (cls.cases[case], c)
-			if flexion not in flexions:
-				flexions[flexion] = {flexion_acc : [arg]}
-			elif flexion_acc not in flexions[flexion]:
-				flexions[flexion][flexion_acc] = [arg]
-			else:
-				flexions[flexion][flexion_acc].append(arg)
-
-	def flexions_args(self):
-		flexions = { }
+	def flexions(self):
+		ret = RuNounFlexions()
 
 		for case in self.cases:
 			couple = self.case(case)
 			if couple is None and case in ("Vocatif", "Partitif"):
 				continue
-			self.prepare_flexion(0, couple, case, flexions)
-			self.prepare_flexion(1, couple, case, flexions)
 
-		for flexion in flexions:
-			yield (flexion, flexions[flexion])
-			
+			for flexion in couple[0]:
+				ret.add_flexion(flexion, self.cases[case][1], SingularNumber)
+			for flexion in couple[1]:
+				ret.add_flexion(flexion, self.cases[case][1], PluralNumber)
+		return ret
+
+	def flexions_args(self):
+		flexions = self.flexions()
+
+		acronyms = flexions.format_acronyms()
+		for acronym in acronyms:
+			yield (acronym, acronyms[acronym])	
