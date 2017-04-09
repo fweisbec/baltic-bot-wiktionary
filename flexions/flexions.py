@@ -2,66 +2,43 @@
 # -*- coding: utf8 -*-
 
 class Gender:
-	NAME = None
+	def __init__(self, name, code):
+		self.name = name
+		self.code = code
 
-class MaleGender(Gender):
-	NAME = u"Masculin"
-
-class FemaleGender(Gender):
-	NAME = u"Feminin"
-
-class NeutralGender(Gender):
-	NAME = u"Neutral"
+MaleGender = Gender(u"Masculin", u"m")
+NeutralGender = Gender(u"Neutral", u"n")
+FemaleGender = Gender(u"Feminin", u"f")
 
 
 class Number:
-	NAME = None
-	CODE = None
+	def __init__(self, name, code):
+		self.name = name
+		self.code = code
 
-class SingularNumber(Number):
-	NAME = u"Singular"
-	CODE = u"s"
+	def __repr__(self):
+		return self.name
 
-class PluralNumber(Number):
-	NAME = u"Plural"
-	CODE = u"p"
+SingularNumber = Number(u"Singular", u"s")
+PluralNumber = Number(u"Plural", u"p")
 
 
 class Case:
-	NAME = None
-	CODE = None
+	def __init__(self, name, code):
+		self.name = name
+		self.code = code
 
-class NominatifCase(Case):
-	NAME = u"Nominatif"
-	CODE = u"n"
+	def __repr__(self):
+		return self.name
 
-class GenitifCase(Case):
-	NAME = u"Génitif"
-	CODE = u"g"
-
-class DatifCase(Case):
-	NAME = u"Datif"
-	CODE = u"d"
-
-class AccusatifCase(Case):
-	NAME = u"Accusatif"
-	CODE = u"a"
-
-class InstrumentalCase(Case):
-	NAME = u"Instrumental"
-	CODE = u"i"
-
-class PrepositionnelCase(Case):
-	NAME = u"Prépositionnel"
-	CODE = u"l"
-
-class VocatifCase(Case):
-	NAME = u"Vocatif"
-	CODE = u"v"
-
-class PartitifCase(Case):
-	NAME = u"Partitif"
-	CODE = u"p"
+NominatifCase = Case(u"Nominatif", u"n")
+GenitifCase = Case(u"Génitif", u"g")
+DatifCase = Case(u"Datif", u"d")
+AccusatifCase = Case(u"Accusatif", u"a")
+InstrumentalCase = Case(u"Instrumental", u"i")
+PrepositionnelCase = Case(u"Prépositionnel", u"l")
+VocatifCase = Case(u"Vocatif", u"v")
+PartitifCase = Case(u"Partitif", u"p")
 
 class Flexion:
 	def __init__(self, val, case):
@@ -78,6 +55,9 @@ class Flexion:
 			return False
 		return True
 
+	def __repr__(self):
+		return u"%s %s" % (self.case, self.val)
+
 class NounFlexion(Flexion):
 	def __init__(self, val, case, number):
 		Flexion.__init__(self, val, case)
@@ -91,37 +71,51 @@ class NounFlexion(Flexion):
 			return False
 		return True
 
-class NounFlexions:
-	def __init__(self, *args):
-		self.flexions = []
-		for arg in args:
-			self.flexions.append(arg)
+	def __repr__(self):
+		return u"%s %s" % (Flexion.__repr__(self), self.number)
 
-	def add_flexion(self, val, case, number):
-		flexion = NounFlexion(val, case, number)
-		self.flexions.append(flexion)
+class AdjectiveFlexion(Flexion):
+	def __init__(self, val, case, number, gender, animate = None):
+		Flexion.__init__(self, val, case)
+		self.number = number
+		self.gender = gender
+		self.animate = animate
+
+	def __eq__(self, other):
+		if not Flexion.__eq__(self, other):
+			return False
+
+		if self.number != other.number or self.gender != other.gender:
+			return False
+		return True
+
+	def __repr__(self):
+		return u"%s %s %s %s" % (Flexion.__repr__(self), self.number, self.gender, self.animate)
+
+class RuFlexions:
+	def __init__(self):
+		self.flexions = []
 
 	@staticmethod
 	def strip_accent(word):
 		return word.replace(u'\u0301', "")
 
-	def format_acronyms(self):
-		acronyms = {}
-		for flexion in self.flexions:
-			word_acc = flexion.val
-			word = self.strip_accent(word_acc)
-			arg = u"%sx%s" % (flexion.case.CODE, flexion.number.CODE)
-			if word not in acronyms:
-				acronyms[word] = {word_acc : [arg]}
-			elif word_acc not in acronyms[word]:
-				acronyms[word][word_acc] = [arg]
-			else:
-				acronyms[word][word_acc].append(arg)
-
-		return acronyms
+	@classmethod
+	def add_acronym(cls, acronyms, word_acc, arg):
+		word = cls.strip_accent(word_acc)
+		if word not in acronyms:
+			acronyms[word] = {word_acc : [arg]}
+		elif word_acc not in acronyms[word]:
+			acronyms[word][word_acc] = [arg]
+		else:
+			acronyms[word][word_acc].append(arg)
 
 	def __repr__(self):
-		return self.flexions.__repr__()
+		ret = u"Flexions: %d" % len(self.flexions)
+		for flexion in self.flexions:
+			ret += u"\n"
+			ret += flexion.__repr__()
+		return ret.encode("utf8")
 
 	def __eq__(self, other):
 		if len(self.flexions) != len(other.flexions):
@@ -138,7 +132,52 @@ class NounFlexions:
 
 		return True
 
+class RuNounFlexions(RuFlexions):
+	def __init__(self, *args):
+		RuFlexions.__init__(self)
+		for arg in args:
+			self.flexions.append(arg)
 
+	def add_flexion(self, val, case, number):
+		flexion = NounFlexion(val, case, number)
+		self.flexions.append(flexion)
 
-class RuNounFlexions(NounFlexions):
-	pass
+	def format_acronyms(self):
+		acronyms = {}
+		for flexion in self.flexions:
+			arg = u"%sx%s" % (flexion.case.code, flexion.number.code)
+			self.add_acronym(acronyms, flexion.val, arg)
+
+		return acronyms
+
+class RuAdjectiveFlexions(RuFlexions):
+	def __init__(self):
+		self.flexions = []
+
+	def add_flexion(self, val, case, number, gender, animate):
+		flexion = AdjectiveFlexion(val, case, number, gender, animate)
+		self.flexions.append(flexion)
+
+	@staticmethod
+	def strip_accent(word):
+		return word.replace(u'\u0301', "")
+
+	def format_acronyms(self):
+		acronyms = {}
+		for flexion in self.flexions:			
+			arg = u"%s" % flexion.case.code
+			if flexion.number is SingularNumber:
+				arg += u"%sx" % flexion.gender.code
+			elif flexion.number is PluralNumber:
+				arg += u"x%s" % flexion.number.code
+			else:
+				raise NotImplementedError
+
+			if flexion.animate is True:
+				arg += u"a"
+			elif flexion.animate is False:
+				arg += u"i"
+
+			self.add_acronym(acronyms, flexion.val, arg)
+
+		return acronyms

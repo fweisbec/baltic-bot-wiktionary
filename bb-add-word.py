@@ -11,11 +11,12 @@ from ru import RuWikicode
 from en import EnRuVerbWikicode
 
 parser = optparse.OptionParser()
-parser.add_option("-l", "--lang", type = "string", dest = "lang")
+parser.add_option("-l", "--lang", type = "string", dest = "lang", default = "ru")
 parser.add_option("-v", "--verb", action = "store_true", dest = "verb")
 parser.add_option("-w", "--word", type = "string", dest = "word")
 parser.add_option("-t", "--trad", type = "string", dest = "trad")
 parser.add_option("-b", "--bot", action = "store_true", dest = "bot", default = False)
+parser.add_option("--dry-run", action = "store_true", dest = "dry_run", default = False)
 parser.add_option("--anto", type = "string", dest = "antonyme")
 
 (options, args) = parser.parse_args()
@@ -27,7 +28,7 @@ u"""== {{langue|ru}} ==
 : %s
 
 === {{S|verbe|ru}} ===
-'''%s''' {{pron|%s|ru}} {{%s|ru}} / [[%s|%s]] {{%s|ru|nocat=1}}
+{{ru-verbe|%s|%s|pron=%s|%s=%s}}
 # %s
 """
 
@@ -57,7 +58,7 @@ class FrRuWikicode(FrWikicode):
 
 class FrRuVerbWikicode(FrRuWikicode):
 	def etym(self):
-		prefixes = (u"пере", u"про", u"при", u"под", u"вы", u"вз", u"вс", u"по", u"до", u"об", u"за", u"в", u"у", u"с")
+		prefixes = (u"пере", u"про", u"при", u"под", u"раз", u"рас", u"вы", u"вз", u"вс", u"по", u"до", u"об", u"за", u"в", u"у", u"с", u"о")
 
 		for prefix in prefixes:
 			if self.word.startswith(prefix):
@@ -74,7 +75,6 @@ class FrRuVerbWikicode(FrRuWikicode):
 		accent_word = wen.accent_word()
 		is_perf = wen.is_perf()
 		coupled_accent = wen.coupled_accent_verb()
-		coupled = wen.coupled_verb()
 
 		# Get russian page
 		wru = RussianNounPage.from_noun(self.word)
@@ -96,10 +96,12 @@ class FrRuVerbWikicode(FrRuWikicode):
 		trad = u"[[%s|%s]]" % (trad, trad.capitalize())
 
 		text = u"=== {{S|verbe|%s}} ===\n" % self.code_lang()
-		text += u"'''%s''' {{pron|%s|ru}} {{%s|ru}} / [[%s|%s]] {{%s|ru|nocat=1}}\n" \
-					% (accent_word, pron, aspect, \
-							coupled, coupled_accent, coupled_aspect)
-		text += u"# %s\n\n" % trad
+		text += u"{{ru-verbe|%s|%s" % (accent_word, aspect)
+		if pron:
+			text += u"|pron=%s" % pron
+		if coupled_accent:
+			text += u"|%s=%s" % (coupled_aspect, coupled_accent)
+		text += u"}}\n# %s\n\n" % trad
 
 		return text
 
@@ -120,18 +122,20 @@ def build(word):
 	if accept == "n":
 		return
 	elif not accept or accept in ("y", "Y"):
-		c = Creator(word.word, wikicode)
-		c.commit(options.bot)
+		if not options.dry_run:
+			c = Creator(word.word, wikicode)
+			c.commit(options.bot)
 	else:
 		print "?"
 
 def main():
-	word = options.word.decode("utf-8")
-	frp = FrenchNounPage.from_noun(word)
-	key = frp.key(word)
-	if frp.valid(key):
-		print "Page already exist"
-		return
+	word = options.word.decode("utf-8").replace(u'\u0301', "")
+	if not options.dry_run:
+		frp = FrenchNounPage.from_noun(word)
+		key = frp.key(word)
+		if frp.valid(key):
+			print "Page already exist"
+			return
 
 	antonyme = options.antonyme
 	if antonyme:

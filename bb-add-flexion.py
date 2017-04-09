@@ -2,6 +2,7 @@
 # -*- coding: utf8 -*-
 
 import os, sys, optparse
+from termcolor import colored
 
 import WiktionaryCookie
 from Wikicode import *
@@ -16,9 +17,9 @@ parser.add_option("-l", "--lang", type = "string", dest = "lang", default = "ru"
 parser.add_option("-b", "--base", type = "string", dest = "base") # base to flex
 parser.add_option("-f", "--flexion", type = "string", dest = "flexion") # flexion
 parser.add_option("-t", "--type", type = "string", dest = "type", default = "noun") # ex: pronoun, noun, adjective
-parser.add_option("-n", "--number", type = "string", dest = "number") # ex: singular, plural
 parser.add_option("-c", "--case", type = "string", dest = "case") # ex: accusative féminin: af
 parser.add_option("-g", "--guess", action = "store_true", dest = "guess") # fetch cases from tab on wiki page
+parser.add_option("--guess-no-check", action = "store_true", dest = "guess_no_check")
 parser.add_option("-a", "--auto", action = "store_true", dest = "auto") # add without confirm
 parser.add_option("--bot", action = "store_true", dest = "bot", default = False)
 
@@ -103,7 +104,7 @@ def add_flexion(base, flexion, flexion_dict):
 	frp = FrenchNounPage.from_noun(flexion)
 	key = frp.key(flexion)
 	if frp.valid(key):
-		print u"Page %s already exist" % flexion
+		print colored(u"Page %s already exist" % flexion, "red")
 		return
 
 	if not options.auto:
@@ -128,16 +129,26 @@ def main():
 			print "-g with -f and -c ?"
 			return
 		if options.lang == "ru":
-			ru_html = HtmlRuRu(base)
-			fr_html = HtmlFrRu(base)
-			# Check that fr. and ru. flexions do match
-			if fr_html.flexions() == ru_html.flexions():
-				print "Flexions in ru. match .fr"
+			if options.type == "noun":
+				fr_html = HtmlFrRuNoun(base)
+				ru_html = HtmlRuRuNoun(base)
+			elif options.type == "adj":
+				fr_html = HtmlFrRuAdj(base)
+				ru_html = HtmlRuRuAdj(base)
 			else:
-				print "Flexions in ru. don't match .fr"
+				raise NotImplementedError
+			# Check that fr. and ru. flexions do match
+			if options.guess_no_check or fr_html.flexions() == ru_html.flexions():
+				print colored("Flexions in ru. match .fr", "green")
+			else:
+				print colored("Flexions in ru. don't match .fr", "red")
+				print fr_html.flexions()
+				print
+				print ru_html.flexions()
 				return
 			for (flexion, flexion_dict) in fr_html.flexions_args():
-				add_flexion(base, flexion, flexion_dict)
+				if flexion != base or len(flexion_dict) > 1:
+					add_flexion(base, flexion, flexion_dict)
 	else:
 		cases = [c.strip() for c in cases.split(",")]
 		flexion = flexion_acc.replace(u'\u0301', "")

@@ -12,19 +12,32 @@ from Iterator import *
 # {{Requête fait}}
 # {{Bot fait|Baltic Bot|Shalott}} ~~~~~
 
-OLD = [u"""(\{\s*\{ru-décl-loc\s*\|.*?)(\|\w+-=[^|}]*)([^}]*)"""]
-NEW = u"\\1\\3"
+#OLD = [u"""'''([^']+)'''\s+\{\{pron\|([^|]+)\|ru\}\}\s+(?:\{\{conjugaison\|ru\}\}\s+)?''\(?\{\{imperf\|ru\}\}\)?''\s+\/\s+\[\[(?:[^|]+\|)?([^]]+)\]\]\s+\(?\{\{perf\|ru\|nocat=1\}\}\)?\n"""]
+IMPERF = 1
+if IMPERF:
+	OLD = [u"""'''([^']+)'''\s+\{\{pron\|([^|]+)\|ru\}\}\s+(?:\{\{conjugaison\|ru\}\}\s+)?''\(imperfectif\)''\s+\/\s+\[\[(?:[^|]+\|)?([^]]+)\]\]\s+''\(perfectif\)''\n"""]
+	NEW = u"{{ru-verbe|\\1|imperf|pron=\\2|perf=\\3}}\n"
+else:
+	OLD = [u"""'''([^']+)'''\s+\{\{pron\|([^|]+)\|ru\}\}\s+(?:\{\{conjugaison\|ru\}\}\s+)?''\(perfectif\)''\s+\/\s+\[\[(?:[^|]+\|)?([^]]+)\]\]\s+''\(imperfectif\)''\n"""]
+	NEW = u"{{ru-verbe|\\1|perf|pron=\\2|imperf=\\3}}\n"
+#OLD = [u"""^'''([^']+)'''\s+\{\{perf\|ru\}\}\s*?\n"""]
+#NEW = u"{{ru-verbe|\\1|perf}}\n"
+#OLD = [u"""'''([^']+)''' (\{\{pron\|\|ru\}\}\s+)?(?:\{\{conjugaison\|ru\}\}\s+)?\{\{perf\|ru\}\}\s*?\n"""]
+#NEW = u"{{ru-verbe|\\1|perf}}\n"
+#OLD = [u"""'''([^']+)''' \{\{pron\|([^|]+)\|ru\}\}\s+(?:\{\{conjugaison\|ru\}\}\s+)?\{\{perf\|ru\}\}\s*?\n"""]
+#NEW = u"{{ru-verbe|\\1|perf|pron=\\2}}\n"
+#OLD = [u"""'''([^']+)''' \{\{pron\|([^|]+)\|ru\}\}\s+(?:\{\{conjugaison\|ru\}\}\s+)?\{\{perf\|ru\}\}\s+\/\s+\[\[(?:[^|]+\|)?([^]]+)\]\]\s+\{\{imperf\|ru\|nocat=1\}\}\s*\n"""]
+#NEW = u"{{ru-verbe|\\1|perf|pron=\\2|imperf=\\3}}\n"
+#OLD = [u"""'''([^']+)''' \{\{pron\|\|ru\}\} \{\{perf\|ru\}\} \/ \[\[[^|]+\|([^]]+)\]\] \{\{imperf\|ru\|nocat=1\}\}\n"""]
+#NEW = u"{{ru-verbe|\\1|perf|imperf=\\2}}\n"
+#OLD = [u"""'''([^']+)''' \{\{pron\|([^|]+)\|ru\}\} \{\{perf\|ru\}\} \/ \[\[[^|]+\|([^]]+)\]\] \{\{imperf\|ru\|nocat=1\}\}\n"""]
+#NEW = u"{{ru-verbe|\\1|perf|pron=\\2|imperf=\\3}}\n"
+#OLD = [u"""'''([^']+)''' \{\{pron\|\|ru\}\} \{\{imperf\|ru\}\} \/ \[\[[^|]+\|([^]]+)\]\] \{\{perf\|ru\|nocat=1\}\}\n"""]
+#NEW = u"{{ru-verbe|\\1|imperf|perf=\\2}}\n"
+#OLD = [u"""'''([^']+)''' \{\{pron\|([^|]+)\|ru\}\} \{\{imperf\|ru\}\} \/ \[\[[^|]+\|([^]]+)\]\] \{\{perf\|ru\|nocat=1\}\}\n"""]
+#NEW = u"{{ru-verbe|\\1|imperf|pron=\\2|perf=\\3}}\n"
 REGEX = True
-#OLD = [u"""\u200e""", u"""\u200f"""]
-#NEW = u""""""
-#REGEX = False
-#OLD = [u"""\[\[Catégorie:([a-zA-ZÉéèàñá:’'| ]+)[\u200f\u200e]+\]\]"""]
-#NEW = u"""[[Catégorie:\\1]]"""
-#OLD = [u"""L’étymologie de ces mots en \[\[([a-zA-ZÉéèàñá:’| ]+)[\u200f\u200e]+\]\] n’a pas été précisée, merci d’y remédier si vous la connaissez."""]
-#NEW = u"""L’étymologie de ces mots en [[\\1]] n’a pas été précisée, merci d’y remédier si vous la connaissez."""
-#OLD = [u"""(\s[a-zA-ZÉéèëêàáãâ‏ũúùçñïíöóôü‏:’'-| ]+)[\u200f\u200e]+(\||\.|\s|(\]\]))"""]
-#NEW = u"""\\1\\2"""
-#REGEX = True
+
 
 parser = optparse.OptionParser()
 parser.add_option("-a", "--auto", action = "store_true", dest = "auto", default = False)
@@ -34,6 +47,7 @@ parser.add_option("-e", "--search", type = "string", dest = "search", default = 
 parser.add_option("-c", "--category", type = "string", dest = "category", default = None)
 parser.add_option("-g", "--ignore-case", action = "store_true", dest = "ignore_case", default = False)
 parser.add_option("-i", "--input", type = "string", dest = "input", default = None)
+parser.add_option("--stdin", action = "store_true", dest = "stdin", default = False)
 parser.add_option("-u", "--summary", type = "string", dest = "summary", default = None)
 (options, args) = parser.parse_args()
 
@@ -107,6 +121,8 @@ def main():
 		it = FrenchCategoryRawIterator(options.category.decode("utf8"))
 	elif options.input:
 		it = NounFileNameIterator(options.input)
+	elif options.stdin:
+		it = NounFileIterator(sys.stdin)
 
 	titles = []
 	for i in it:
