@@ -63,6 +63,12 @@ class WikicodeFrench(object):
 			txt += u"[[%s:%s]]\n" % (dom, word)
 		return txt
 
+	def suppr_doms(self, word, doms):
+		txt = self.wikicode
+		for dom in doms:
+			txt = re.sub(u"\[\[%s:%s\]\]\n?" % (dom, word), "", txt, count = 500, flags = re.M | re.U)
+		return txt.rstrip()
+
 	def add_category(self, cat):
 		parsed = mwparserfromhell.parse(self.wikicode)
 		section = parsed.get_sections(matches = lambda x: u"langue" in x and u"es" in x)
@@ -111,6 +117,10 @@ class Editor(object):
 		w = WikicodeFrench(self.new)
 		self.new = w.update_doms(self.noun, doms)
 
+	def suppr_doms(self, doms):
+		w = WikicodeFrench(self.new)
+		self.new = w.suppr_doms(self.noun, doms)
+
 	def replace(self, old, new):
 		prev = self.new
 		self.new = self.new.replace(old, new)
@@ -148,7 +158,7 @@ class Editor(object):
 
 		return True
 
-	def commit(self, summary):
+	def commit(self, summary, minor = False):
 		tkpage = JsonPage("https://fr.wiktionary.org/w/api.php?action=query&meta=tokens&format=json")
 		token = tkpage.json["query"]["tokens"]["csrftoken"]
 		post = {
@@ -160,6 +170,10 @@ class Editor(object):
 			"token" : token,
 			"bot"	: ""
 		}
+
+		if minor:
+			post["minor"] = ""
+
 		url = "https://fr.wiktionary.org/w/api.php"
 		cookies = WiktionaryCookie.WiktionaryCookie.getInstance()
 		req = requests.post(url, data = post, cookies = cookies)
